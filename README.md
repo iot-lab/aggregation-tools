@@ -13,6 +13,7 @@ Aggregate all the serial links of an experiment and print it to stdout.
 ### Usage ###
 
     $ serial_aggregator [-i <exp_id>] [-l nodes_list|-l ...]
+    1395240359.168975;Aggregator started
     1395240359.286712;m3-46; Type Enter to stop printing this help
     1395240359.286853;m3-46;
     1395240359.292523;m3-9;
