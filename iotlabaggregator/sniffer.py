@@ -82,14 +82,16 @@ class SnifferAggregator(connections.Aggregator):
 
     parser = argparse.ArgumentParser()
     common.add_nodes_selection_parser(parser)
-    parser.add_argument(
-        '-o', '--outfile', dest='outfd', type=argparse.FileType('wb'),
-        required=True, help="Pcap outfile. Use '-' for stdout.")
+    _output = parser.add_argument_group("Sniffer output")
+    _output.add_argument(
+        '-o', '--outfile', metavar='PCAP_FILE', dest='outfd',
+        type=argparse.FileType('wb'), required=True,
+        help="Pcap outfile. Use '-' for stdout.")
 
     def __init__(self, nodes_list, outfd, *args, **kwargs):
-        zpcap = zeptopcap.ZepPcap(outfd)
+        zep_pcap = zeptopcap.ZepPcap(outfd)
         super(SnifferAggregator, self).__init__(
-            nodes_list, pkt_handler=zpcap.write, *args, **kwargs)
+            nodes_list, pkt_handler=zep_pcap.write, *args, **kwargs)
 
     @staticmethod
     def select_nodes(opts):

@@ -12,7 +12,7 @@ Aggregate all the serial links of an experiment and print it to stdout.
 
 ### Usage ###
 
-    $ ./serial_aggregator [-i <exp_id>] [-l nodes_list|-l nodes_list]
+    $ serial_aggregator [-i <exp_id>] [-l nodes_list|-l ...]
     1395240359.286712;m3-46; Type Enter to stop printing this help
     1395240359.286853;m3-46;
     1395240359.292523;m3-9;
@@ -33,6 +33,7 @@ Aggregate all the serial links of an experiment and print it to stdout.
 ### Sending messages ###
 
 Standard input is parsed to allow sending messages to the nodes.
+It's read using 'readline' and so you get a shell-like feeling.
 
 Parsing is done using the function `extract_nodes_and_message(line)` see the
 docstring for all allowed values.
@@ -55,7 +56,7 @@ docstring for all allowed values.
 Sniffer aggregator
 ------------------
 
-Aggregate all the gateways sniffer into a file.
+Aggregate all the gateways sniffer into a pcap formatted file.
 
 The gateways sniffer generate 'ZEP' encapsulated data:
 <https://www.wireshark.org/docs/dfref/z/zep.html>
@@ -63,4 +64,24 @@ The gateways sniffer generate 'ZEP' encapsulated data:
 ZEP packets are saved in a pcap file encapsulated as a Ethernet-IP-UDP packet
 send to port 17754 <http://wiki.wireshark.org/IEEE_802.15.4>.
 
+
+### Usage ###
+
+#### From the ssh frontend ####
+
+Basic usage from the ssh fronted
+
+    $ sniffer_aggregator [-i <exp_id>] [-l nodes_list|-l ...] <-o pcap_file>
+
+    # save current experiment output to a file
+    $ sniffer_aggregator -o radio_experiment.pcap
+    1420464895.805985;Aggregator started
+
+
+#### From your computer ####
+
+Connecting to your computer wireshark using pipes
+
+    # Connect the output to your PC wireshark
+    you@yourpc $ ssh <user>@<site> 'serial_aggregator -o -' | wireshark -k -i -
 
