@@ -3,6 +3,7 @@
 
 """ Aggregate multiple tcp connections """
 
+import os
 import sys
 import asyncore
 import threading
@@ -73,12 +74,18 @@ class Aggregator(dict):  # pylint:disable=too-many-public-methods
                              (self.__class__.__name__, nodes_list))
         super(Aggregator, self).__init__()
 
-        self.thread = threading.Thread(target=asyncore.loop,
-                                       kwargs={'timeout': 1, 'use_poll': True})
+        self.thread = threading.Thread(target=self._loop)
         # create all the Connections
         for node_url in nodes_list:
             node = self.connection_class(node_url, *args, **kwargs)
             self[node_url] = node
+
+    @staticmethod
+    def _loop():
+        """ Run asyncore loop send SIGINT at the end to stop main process """
+        asyncore.loop(timeout=1, use_poll=True)
+        LOGGER.info("Loop finished, all connection closed")
+        os.kill(os.getpid(), signal.SIGINT)
 
     def start(self):
         """ Connect all nodes and run asyncore.loop in a thread """
