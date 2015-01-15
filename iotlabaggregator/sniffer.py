@@ -7,6 +7,7 @@
 
 import argparse
 import sys
+import logging
 
 import iotlabaggregator
 from iotlabaggregator import connections, common, zeptopcap
@@ -15,7 +16,7 @@ from iotlabaggregator import connections, common, zeptopcap
 class SnifferConnection(connections.Connection):
     """ Connection to sniffer and data handling """
     port = 30000
-    zep_hdr_len = 32
+    zep_hdr_len = zeptopcap.ZepPcap.zep_hdr_len
 
     def __init__(self, hostname, pkt_handler):
         super(SnifferConnection, self).__init__(hostname)
@@ -35,7 +36,8 @@ class SnifferConnection(connections.Connection):
 
             # Extract packet
             pkt, data = data[:full_len], data[full_len:]
-            iotlabaggregator.LOGGER.debug("Got one message")
+            iotlabaggregator.LOGGER.debug('%s;Packet received len: %d',
+                                          self.hostname, full_len)
             self.pkt_handler(pkt)
 
         return data
@@ -87,9 +89,15 @@ class SnifferAggregator(connections.Aggregator):
         '-o', '--outfile', metavar='PCAP_FILE', dest='outfd',
         type=argparse.FileType('wb'), required=True,
         help="Pcap outfile. Use '-' for stdout.")
+    _output.add_argument(
+        '-d', '--debug', action='store_true', default=False,
+        help="Print debug on received packets")
+    _output.add_argument(
+        '-r', '--raw', '--foren6', action='store_true', default=False,
+        help="Extract payload and no encapsulation. For foren6.")
 
-    def __init__(self, nodes_list, outfd, *args, **kwargs):
-        zep_pcap = zeptopcap.ZepPcap(outfd)
+    def __init__(self, nodes_list, outfd, raw=False, *args, **kwargs):
+        zep_pcap = zeptopcap.ZepPcap(outfd, raw)
         super(SnifferAggregator, self).__init__(
             nodes_list, pkt_handler=zep_pcap.write, *args, **kwargs)
 
@@ -108,8 +116,10 @@ def main(args=None):
     try:
         # Parse arguments
         nodes_list = SnifferAggregator.select_nodes(opts)
+        if opts.debug:
+            iotlabaggregator.LOGGER.setLevel(logging.DEBUG)
         # Run the aggregator
-        with SnifferAggregator(nodes_list, opts.outfd) as aggregator:
+        with SnifferAggregator(nodes_list, opts.outfd, opts.raw) as aggregator:
             aggregator.run()
     except (ValueError, RuntimeError) as err:
         sys.stderr.write("%s\n" % err)
