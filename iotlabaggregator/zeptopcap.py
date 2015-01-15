@@ -19,17 +19,10 @@ class ZepPcap(object):  # pylint:disable=too-few-public-methods
     On `write` encapsulate the message as a zep packet in `outfile` pcap format
     """
     zep_port = 17754
-    # PCAP headers as native endian
-    pcap_global_hdr = struct.pack(
-        '=LHHLLLL',
-        0xa1b2c3d4,    # Pcap header Little Endian
-        2,             # File format major revision (i.e. pcap <2>.4)
-        4,             # File format minor revision (i.e. pcap 2.<4>)
-        0,             # GMT to local correction: 0 if timestamps are UTC
-        0,             # accuracy of timestamps -> set it to 0
-        0xffff,        # packet capture limit -> typically 65535
-        1,             # Link: Ethernet
-    )
+    zep_hdr_len = 32
+    # http://www.tcpdump.org/linktypes.html
+    linktype_ethernet = 1
+    linktype_ieee802_15_4 = 195  # with FCS
 
     # Network headers as network endian
     eth_hdr = struct.pack('!3H3HH',
@@ -37,16 +30,22 @@ class ZepPcap(object):  # pylint:disable=too-few-public-methods
                           0, 0, 0,  # src mac addr
                           0x0800)   # Protocol: (0x0800 == IP)
 
-    def __init__(self, outfile):
+    def __init__(self, outfile, raw=False):
         self.out = outfile
+
+        # configure "raw" mode
+        # On raw, use linktype 802.15_4 else ethernet encapsulation
+        self.write = self._write_raw if raw else self._write_zep
+        link = self.linktype_ieee802_15_4 if raw else self.linktype_ethernet
+
         # Write global header
-        self.out.write(self.pcap_global_hdr)
+        hdr = self._main_pcap_header(link)
+        self.out.write(hdr)
         self.out.flush()
 
-    def write(self, packet):
-        """ Save packet in pcap outfile """
-        date = datetime.datetime.utcnow()
-        timestamp = (calendar.timegm(date.utctimetuple()), date.microsecond)
+    def _write_zep(self, packet):
+        """ Encapsulate ZEP data in pcap outfile """
+        timestamp = self._timestamp()
 
         # Calculate all headers
         length = len(packet)
@@ -70,6 +69,29 @@ class ZepPcap(object):  # pylint:disable=too-few-public-methods
         self.out.write(udp_hdr)
         self.out.write(packet)
         self.out.flush()
+
+    def _write_raw(self, packet):
+        """ Only write the ZEP payload as pcap"""
+        timestamp = self._timestamp()
+
+        # extract payload from zep encapsulated data
+        payload = packet[self.zep_hdr_len:]
+
+        # Only add pcap header
+        length = len(payload)
+        pcap_hdr = self._pcap_header(length, timestamp[0], timestamp[1])
+        length += len(pcap_hdr)
+
+        # Actually write the data
+        self.out.write(pcap_hdr)
+        self.out.write(payload)
+        self.out.flush()
+
+    @staticmethod
+    def _timestamp():
+        """ Return current timestamp as a tuple (s, us) """
+        date = datetime.datetime.utcnow()
+        return (calendar.timegm(date.utctimetuple()), date.microsecond)
 
     def _udp_header(self, pkt_len):
         """ Get UDP Header
@@ -151,6 +173,23 @@ class ZepPcap(object):  # pylint:disable=too-few-public-methods
         # Reduce to 16b and save the one complement
         checksum = (csum + (csum >> 16)) & 0xFFFF ^ 0xFFFF
         return checksum
+
+    @staticmethod
+    def _main_pcap_header(link_type):
+        """ Return the main pcap file header for `link_type`
+
+        PCAP headers as native endian
+        """
+        return struct.pack(
+            '=LHHLLLL',
+            0xa1b2c3d4,  # Pcap header Little Endian
+            2,           # File format major revision (i.e. pcap <2>.4)
+            4,           # File format minor revision (i.e. pcap 2.<4>)
+            0,           # GMT to local correction: 0 if timestamps are UTC
+            0,           # accuracy of timestamps -> set it to 0
+            0xffff,      # packet capture limit -> typically 65535
+            link_type,   # Link (Ethernet/802.15.4 FCS/...)
+        )
 
 
 def main():
