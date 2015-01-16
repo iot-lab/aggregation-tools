@@ -81,6 +81,7 @@ class Aggregator(dict):  # pylint:disable=too-many-public-methods
             raise ValueError("%s: Empty nodes list %r" %
                              (self.__class__.__name__, nodes_list))
         super(Aggregator, self).__init__()
+        self._running = False
 
         self.thread = threading.Thread(target=self._loop)
         # create all the Connections
@@ -88,15 +89,16 @@ class Aggregator(dict):  # pylint:disable=too-many-public-methods
             node = self.connection_class(node_url, *args, **kwargs)
             self[node_url] = node
 
-    @staticmethod
-    def _loop():
+    def _loop(self):
         """ Run asyncore loop send SIGINT at the end to stop main process """
         asyncore.loop(timeout=1, use_poll=True)
-        LOGGER.info("Loop finished, all connection closed")
-        os.kill(os.getpid(), signal.SIGINT)
+        if self._running:  # Don't send signal if we are stopping
+            LOGGER.info("Loop finished, all connection closed")
+            os.kill(os.getpid(), signal.SIGINT)
 
     def start(self):
         """ Connect all nodes and run asyncore.loop in a thread """
+        self._running = True
         for node in self.itervalues():
             node.start()
         self.thread.start()
@@ -105,6 +107,7 @@ class Aggregator(dict):  # pylint:disable=too-many-public-methods
     def stop(self):
         """ Stop the nodes connection and stop asyncore.loop thread """
         LOGGER.info("Stopping")
+        self._running = False
         for node in self.itervalues():
             node.close()
         self.thread.join()
