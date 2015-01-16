@@ -6,6 +6,7 @@
 import os
 import sys
 import asyncore
+from asyncore import dispatcher_with_send
 import threading
 import socket
 import signal
@@ -13,7 +14,14 @@ import signal
 from iotlabaggregator import LOGGER
 
 
-class Connection(object, asyncore.dispatcher):  # pylint:disable=R0904
+# Use dispatcher_with_send to correctly implement buffered sending
+# either we get 100% CPU as 'writeable' is always 'True
+# http://stackoverflow.com/questions/22423625/ \
+#     python-asyncore-using-100-cpu-after-client-connects
+# Found dispatcher_with_send in the asyncore code
+
+
+class Connection(object, dispatcher_with_send):  # pylint:disable=R0904
     """
     Handle the connection to one node
     Data is managed with asyncore. So to work asyncore.loop() should be run.
@@ -24,7 +32,7 @@ class Connection(object, asyncore.dispatcher):  # pylint:disable=R0904
 
     def __init__(self, hostname):
         super(Connection, self).__init__()
-        asyncore.dispatcher.__init__(self)
+        dispatcher_with_send.__init__(self)
         self.hostname = hostname  # node identifier for the user
         self.data_buff = ''       # received data buffer
 
