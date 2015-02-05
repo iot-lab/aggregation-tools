@@ -23,12 +23,12 @@ def get_version():
 
 SCRIPTS = ['serial_aggregator', 'sniffer_aggregator']
 DL_URL = 'http://github.com/iot-lab/iot-lab/tools_and_scripts/aggregator/'
-SETUP_DEPS = [
+TESTS_DEPS = [
     'setuptools-pep8', 'setuptools-lint', 'nose', 'nosexcover', 'mock'
 ]
 if (2, 6) == sys.version_info[0:2]:
-    SETUP_DEPS.append('pylint<1.4.0')
-    SETUP_DEPS.append('astroid<1.3.0')
+    TESTS_DEPS.append('pylint<1.4.0')
+    TESTS_DEPS.append('astroid<1.3.0')
 
 
 setup(
@@ -47,4 +47,5 @@ setup(
                  'Environment :: Console',
                  'Topic :: Utilities', ],
     install_requires=['iotlabcli>=1.4.0'],
+    tests_require=TESTS_DEPS,
 )
