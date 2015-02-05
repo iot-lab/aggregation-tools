@@ -4,6 +4,7 @@
 """ Common functions that may be required """
 import os
 import itertools
+import iotlabaggregator
 from iotlabcli import experiment
 import iotlabcli.parser.common
 import iotlabcli.parser.node
@@ -119,6 +120,8 @@ def add_nodes_selection_parser(parser):
     """ Add parser arguments for selecting nodes """
 
     iotlabcli.parser.common.add_auth_arguments(parser)
+    parser.add_argument('-v', '--version', action='version',
+                        version=iotlabaggregator.__version__)
     nodes_group = parser.add_argument_group(
         description="By default, select currently running experiment nodes",
         title="Nodes selection")
