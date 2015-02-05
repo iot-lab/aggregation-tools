@@ -69,8 +69,9 @@ class SerialConnection(connections.Connection):  # pylint:disable=R0903,R0904
     logger.setLevel(logging.INFO)
     logger.addHandler(_line_logger)
 
-    def __init__(self, hostname, print_lines=False, line_handler=None):
-        super(SerialConnection, self).__init__(hostname)
+    def __init__(self, hostname, aggregator,
+                 print_lines=False, line_handler=None):
+        super(SerialConnection, self).__init__(hostname, aggregator)
 
         self.line_handler = common.Event()
         if print_lines:

@@ -18,8 +18,8 @@ class SnifferConnection(connections.Connection):
     port = 30000
     zep_hdr_len = zeptopcap.ZepPcap.zep_hdr_len
 
-    def __init__(self, hostname, pkt_handler):
-        super(SnifferConnection, self).__init__(hostname)
+    def __init__(self, hostname, aggregator, pkt_handler):
+        super(SnifferConnection, self).__init__(hostname, aggregator)
         self.pkt_handler = pkt_handler
 
     def handle_data(self, data):
@@ -39,6 +39,7 @@ class SnifferConnection(connections.Connection):
             iotlabaggregator.LOGGER.debug('%s;Packet received len: %d',
                                           self.hostname, full_len)
             self.pkt_handler(pkt)
+            self.aggregator.rx_packets += 1
 
         return data
 
@@ -100,6 +101,7 @@ class SnifferAggregator(connections.Aggregator):
         zep_pcap = zeptopcap.ZepPcap(outfd, raw)
         super(SnifferAggregator, self).__init__(
             nodes_list, pkt_handler=zep_pcap.write, *args, **kwargs)
+        self.rx_packets = 0
 
     @staticmethod
     def select_nodes(opts):
@@ -121,6 +123,8 @@ def main(args=None):
         # Run the aggregator
         with SnifferAggregator(nodes_list, opts.outfd, opts.raw) as aggregator:
             aggregator.run()
+            iotlabaggregator.LOGGER.info('%u packets captured',
+                                         aggregator.rx_packets)
     except (ValueError, RuntimeError) as err:
         sys.stderr.write("%s\n" % err)
         exit(1)

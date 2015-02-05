@@ -30,11 +30,12 @@ class Connection(object, dispatcher_with_send):  # pylint:disable=R0904
     """
     port = 20000
 
-    def __init__(self, hostname):
+    def __init__(self, hostname, aggregator):
         super(Connection, self).__init__()
         dispatcher_with_send.__init__(self)
         self.hostname = hostname  # node identifier for the user
         self.data_buff = ''       # received data buffer
+        self.aggregator = aggregator
 
     def handle_data(self, data):
         """ Dummy handle data """
@@ -52,6 +53,8 @@ class Connection(object, dispatcher_with_send):  # pylint:disable=R0904
         self.data_buff = ''
         LOGGER.error('%s;Connection closed', self.hostname)
         self.close()
+        # remove itself from aggregator
+        self.aggregator.pop(self.hostname, None)
 
     def handle_read(self):
         """ Append read bytes to buffer and run data handler. """
@@ -86,7 +89,7 @@ class Aggregator(dict):  # pylint:disable=too-many-public-methods
         self.thread = threading.Thread(target=self._loop)
         # create all the Connections
         for node_url in nodes_list:
-            node = self.connection_class(node_url, *args, **kwargs)
+            node = self.connection_class(node_url, self, *args, **kwargs)
             self[node_url] = node
 
     def _loop(self):
