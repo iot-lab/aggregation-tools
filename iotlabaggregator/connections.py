@@ -76,7 +76,7 @@ class Aggregator(dict):  # pylint:disable=too-many-public-methods
     After init, it can be manipulated like a dict.
     """
 
-    connection_class = Connection
+    connection_class = Connection  # overriden in child class
 
     def __init__(self, nodes_list, *args, **kwargs):
 

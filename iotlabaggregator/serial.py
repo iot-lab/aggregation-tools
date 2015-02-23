@@ -99,7 +99,7 @@ class SerialConnection(connections.Connection):  # pylint:disable=R0903,R0904
 
 
 class SerialAggregator(connections.Aggregator):
-    """ Aggregator for the Sniffer """
+    """ Aggregator for the Serial """
     connection_class = SerialConnection
 
     parser = argparse.ArgumentParser()
@@ -123,7 +123,7 @@ class SerialAggregator(connections.Aggregator):
         return nodes_list
 
     def run(self):  # overwrite original function
-        """ Nothing to do, wait for any signal """
+        """ Read standard input while aggregator is running """
         try:
             self.read_input()
         except (KeyboardInterrupt, EOFError):
