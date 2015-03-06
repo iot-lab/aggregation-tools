@@ -1,10 +1,11 @@
 #! /usr/bin/env python
 # -*- coding:utf-8 -*-
 """ Aggregator tools for IoT-Lab platform """
-__version__ = '1.2.1'
 
 import sys
 import logging
+
+__version__ = '1.2.2'
 
 
 # Use loggers for all outputs to have the same config

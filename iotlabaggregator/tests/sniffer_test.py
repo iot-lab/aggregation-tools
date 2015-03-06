@@ -40,7 +40,9 @@ class TestSnifferHandleRead(unittest.TestCase):
         def recv(_):
             return self.zep_message
 
-        sniff = sniffer.SnifferConnection('m3-1', sniffer, self.outfd.write)
+        aggregator = Mock()
+        aggregator.rx_packets = 0
+        sniff = sniffer.SnifferConnection('m3-1', aggregator, self.outfd.write)
         sniff.recv = Mock(side_effect=recv)
         sniff.handle_read()
         sniff.handle_read()
@@ -50,7 +52,9 @@ class TestSnifferHandleRead(unittest.TestCase):
         def recv(_):
             return 'invaEEEXlidE_data' + self.zep_message
 
-        sniff = sniffer.SnifferConnection('m3-1', sniffer, self.outfd.write)
+        aggregator = Mock()
+        aggregator.rx_packets = 0
+        sniff = sniffer.SnifferConnection('m3-1', aggregator, self.outfd.write)
         sniff.recv = Mock(side_effect=recv)
 
         sniff.handle_read()
@@ -73,7 +77,9 @@ class TestSnifferHandleRead(unittest.TestCase):
             del msg[0:num_chars]
             return ''.join(ret)
 
-        sniff = sniffer.SnifferConnection('m3-1', sniffer, self.outfd.write)
+        aggregator = Mock()
+        aggregator.rx_packets = 0
+        sniff = sniffer.SnifferConnection('m3-1', aggregator, self.outfd.write)
         sniff.recv = Mock(side_effect=recv)
 
         while msg:

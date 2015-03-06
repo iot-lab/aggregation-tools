@@ -37,7 +37,9 @@ To give a 'correct' looking output, only lines are printed.
 The script will get the serial links current site nodes.
 For multi-sites experiments, you should run the script on each site server.
 """
+# pylint versions have different outputs...
 # pylint:disable=too-few-public-methods
+# pylint:disable=too-many-public-methods
 
 # use readline for 'raw_input'
 import readline  # noqa  # pylint:disable=unused-import

@@ -3,7 +3,9 @@
 
 """ Sniff tcp socket zep messages and save them as pcap """
 
+# pylint versions have different outputs...
 # pylint:disable=too-few-public-methods
+# pylint:disable=too-many-public-methods
 
 import argparse
 import sys

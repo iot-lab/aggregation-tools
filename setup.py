@@ -4,41 +4,36 @@
 """ Install some of the scripts.
 Intended to be run on the ssh frontends """
 
-import sys
+import os
 from setuptools import setup, find_packages
 
+PACKAGE = 'iotlabaggregator'
 
-def get_version():
-    """ Extract module version without importing file
+
+def get_version(package):
+    """ Extract package version without importing file
     Importing cause issues with coverage,
         (modules can be removed from sys.modules to prevent this)
     Importing __init__.py triggers importing rest and then requests too
 
     Inspired from pep8 setup.py
     """
-    with open('iotlabaggregator/__init__.py') as init_f:
-        for line in init_f:
+    with open(os.path.join(package, '__init__.py')) as init_fd:
+        for line in init_fd:
             if line.startswith('__version__'):
                 return eval(line.split('=')[-1])  # pylint:disable=eval-used
 
 SCRIPTS = ['serial_aggregator', 'sniffer_aggregator']
-DL_URL = 'http://github.com/iot-lab/iot-lab/tools_and_scripts/aggregator/'
-TESTS_DEPS = [
-    'setuptools-pep8', 'setuptools-lint', 'nose', 'nosexcover', 'mock'
-]
-if (2, 6) == sys.version_info[0:2]:
-    TESTS_DEPS.append('pylint<1.4.0')
-    TESTS_DEPS.append('astroid<1.3.0')
 
 
 setup(
-    name='iotlabaggregator',
-    version='1.0.0',
+    name=PACKAGE,
+    version=get_version(PACKAGE),
     description='IoT-LAB testbed node connection command-line tools',
     author='IoT-LAB Team',
     author_email='admin@iot-lab.info',
     url='http://www.iot-lab.info',
-    download_url=DL_URL,
+    download_url='https://github.com/iot-lab/aggregation-tools',
     packages=find_packages(),
     scripts=SCRIPTS,
     classifiers=['Development Status :: 3 - Alpha',
@@ -47,5 +42,4 @@ setup(
                  'Environment :: Console',
                  'Topic :: Utilities', ],
     install_requires=['iotlabcli>=1.4.0'],
-    tests_require=TESTS_DEPS,
 )
