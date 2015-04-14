@@ -27,8 +27,6 @@
 #      Generate-a-quick-and-easy-custom-pcap-file-using-P
 
 import sys
-import datetime
-import calendar
 import struct
 
 
@@ -38,9 +36,14 @@ class ZepPcap(object):  # pylint:disable=too-few-public-methods
     """
     ZEP_PORT = 17754
     ZEP_HDR_LEN = 32
+    ZEP_TIME_IDX = 9
     # http://www.tcpdump.org/linktypes.html
     LINKTYPE_ETHERNET = 1
     LINKTYPE_IEEE802_15_4 = 195  # with FCS
+
+    # 1970 - 1900 in seconds
+    NTP_JAN_1970 = 2208988800
+    NTP_SECONDS_FRAC = 1 << 32
 
     # Network headers as network endian
     eth_hdr = struct.pack('!3H3HH',
@@ -63,7 +66,7 @@ class ZepPcap(object):  # pylint:disable=too-few-public-methods
 
     def _write_zep(self, packet):
         """ Encapsulate ZEP data in pcap outfile """
-        timestamp = self._timestamp()
+        timestamp = self._timestamp(packet)
 
         # Calculate all headers
         length = len(packet)
@@ -90,7 +93,7 @@ class ZepPcap(object):  # pylint:disable=too-few-public-methods
 
     def _write_raw(self, packet):
         """ Only write the ZEP payload as pcap"""
-        timestamp = self._timestamp()
+        timestamp = self._timestamp(packet)
 
         # extract payload from zep encapsulated data
         payload = packet[self.ZEP_HDR_LEN:]
@@ -105,11 +108,19 @@ class ZepPcap(object):  # pylint:disable=too-few-public-methods
         self.out.write(payload)
         self.out.flush()
 
-    @staticmethod
-    def _timestamp():
-        """ Return current timestamp as a tuple (s, us) """
-        date = datetime.datetime.utcnow()
-        return (calendar.timegm(date.utctimetuple()), date.microsecond)
+    def _timestamp(self, packet):
+        """ Extract packet timestamp as an unix time tuple (s, us)
+        Packet timestamp is in 'ntp' format.
+
+        MSB are seconds stored since 1 january 1900
+        LSB are fraction of seconds where 2**32 == 1 second
+        """
+        ntp_t = struct.unpack_from('!LL', packet, self.ZEP_TIME_IDX)
+
+        t_s = ntp_t[0] - self.NTP_JAN_1970
+        t_us = (1000000 * ntp_t[1]) / self.NTP_SECONDS_FRAC
+
+        return t_s, t_us
 
     def _udp_header(self, pkt_len):
         """ Get UDP Header
