@@ -1,8 +1,11 @@
-IoT-Lab Aggregator
-==================
+IoT-Lab Aggregation tools
+=========================
 
 Tools that allow aggregating data results from many nodes at a time.
 It connects to several tcp connections and handle the received data.
+
+IoT-LAB aggregation-tools, including all examples, code snippets and attached
+documentation is covered by the CeCILL v2.1 free software licence.
 
 
 Serial aggregator
