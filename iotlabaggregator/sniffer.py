@@ -37,7 +37,7 @@ from iotlabaggregator import connections, common, zeptopcap
 class SnifferConnection(connections.Connection):
     """ Connection to sniffer and data handling """
     port = 30000
-    zep_hdr_len = zeptopcap.ZepPcap.zep_hdr_len
+    ZEP_HDR_LEN = zeptopcap.ZepPcap.ZEP_HDR_LEN
 
     def __init__(self, hostname, aggregator, pkt_handler):
         super(SnifferConnection, self).__init__(hostname, aggregator)
@@ -48,10 +48,10 @@ class SnifferConnection(connections.Connection):
 
         while True:
             data = self._strip_until_pkt_start(data)
-            if not data.startswith('EX\2') or len(data) < self.zep_hdr_len:
+            if not data.startswith('EX\2') or len(data) < self.ZEP_HDR_LEN:
                 break
             # length = header length + data['len_byte']
-            full_len = self.zep_hdr_len + ord(data[self.zep_hdr_len - 1])
+            full_len = self.ZEP_HDR_LEN + ord(data[self.ZEP_HDR_LEN - 1])
             if len(data) < full_len:
                 break
 

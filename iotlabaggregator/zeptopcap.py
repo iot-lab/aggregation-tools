@@ -36,11 +36,11 @@ class ZepPcap(object):  # pylint:disable=too-few-public-methods
     """ Zep to Pcap converter
     On `write` encapsulate the message as a zep packet in `outfile` pcap format
     """
-    zep_port = 17754
-    zep_hdr_len = 32
+    ZEP_PORT = 17754
+    ZEP_HDR_LEN = 32
     # http://www.tcpdump.org/linktypes.html
-    linktype_ethernet = 1
-    linktype_ieee802_15_4 = 195  # with FCS
+    LINKTYPE_ETHERNET = 1
+    LINKTYPE_IEEE802_15_4 = 195  # with FCS
 
     # Network headers as network endian
     eth_hdr = struct.pack('!3H3HH',
@@ -54,7 +54,7 @@ class ZepPcap(object):  # pylint:disable=too-few-public-methods
         # configure "raw" mode
         # On raw, use linktype 802.15_4 else ethernet encapsulation
         self.write = self._write_raw if raw else self._write_zep
-        link = self.linktype_ieee802_15_4 if raw else self.linktype_ethernet
+        link = self.LINKTYPE_IEEE802_15_4 if raw else self.LINKTYPE_ETHERNET
 
         # Write global header
         hdr = self._main_pcap_header(link)
@@ -93,7 +93,7 @@ class ZepPcap(object):  # pylint:disable=too-few-public-methods
         timestamp = self._timestamp()
 
         # extract payload from zep encapsulated data
-        payload = packet[self.zep_hdr_len:]
+        payload = packet[self.ZEP_HDR_LEN:]
 
         # Only add pcap header
         length = len(payload)
@@ -122,7 +122,7 @@ class ZepPcap(object):  # pylint:disable=too-few-public-methods
         """
         hdr_struct = struct.Struct('!HHHH')
         udp_len = hdr_struct.size + pkt_len
-        udp_hdr = hdr_struct.pack(self.zep_port, self.zep_port, udp_len, 0)
+        udp_hdr = hdr_struct.pack(self.ZEP_PORT, self.ZEP_PORT, udp_len, 0)
         return udp_hdr
 
     def _ip_header(self, pkt_len):
