@@ -148,13 +148,7 @@ def add_nodes_selection_parser(parser):
 
     nodes_group.add_argument('-i', '--id', dest='experiment_id', type=int,
                              help='experiment id submission')
-
-    nodes_group.add_argument(
-        '-l', '--list', type=iotlabcli.parser.node.nodes_list_from_str,
-        action='append', default=[],
-        dest='nodes_list', help='nodes list in format: "site,archi,1-5+9". '
-        'Can be supplied multiple times'
-    )
+    iotlabcli.parser.common.add_nodes_selection_list(parser)
 
 
 def get_nodes_selection(username, password, experiment_id, nodes_list,
