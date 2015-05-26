@@ -117,9 +117,10 @@ def get_experiment_nodes(api, exp_id=None, hostname=HOSTNAME):
     return extract_nodes(resources, hostname)
 
 
-def query_nodes(api, exp_id=None, nodes_list_list=(), hostname=HOSTNAME):
+def query_nodes(api, exp_id=None, nodes_list_list=None, hostname=HOSTNAME):
     """ Get nodes list from experiment and/or nodes_list_list.
     Or currently running experiment if none provided """
+    nodes_list_list = nodes_list_list or ()
     nodes_list = frozenset(itertools.chain.from_iterable(nodes_list_list))
 
     nodes = set()
