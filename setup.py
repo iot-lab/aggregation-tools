@@ -64,7 +64,5 @@ setup(
                  'Intended Audience :: End Users/Desktop',
                  'Environment :: Console',
                  'Topic :: Utilities', ],
-    dependency_links=['https://github.com/iot-lab/cli-tools/tarball/master'
-                      '#egg=iotlabcli-1.6.0'],
     install_requires=['iotlabcli>=1.6.0'],
 )
