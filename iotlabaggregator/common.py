@@ -25,6 +25,7 @@
 import os
 import itertools
 import iotlabaggregator
+import iotlabcli
 from iotlabcli import experiment
 import iotlabcli.parser.common
 import iotlabcli.parser.node
@@ -75,7 +76,7 @@ class Event(list):  # pylint:disable=too-few-public-methods
         return "Event(%r)" % list.__repr__(self)
 
 
-def extract_nodes(resources, hostname=HOSTNAME):
+def extract_nodes(resources, hostname=None):
     """ Extract the nodes for this server
     >>> resources = {"items": [ \
         {'network_address': 'm3-1.grenoble.iot-lab.info', 'site': 'grenoble'},\
@@ -90,18 +91,20 @@ def extract_nodes(resources, hostname=HOSTNAME):
     >>> extract_nodes(resources, hostname='grenoble')
     ['m3-1', 'wsn430-4', 'a8-1']
     """
+    hostname = hostname or HOSTNAME
     sites_nodes = [n for n in resources['items'] if n['site'] == hostname]
     nodes = [n['network_address'].split('.')[0] for n in sites_nodes]
     return nodes
 
 
-def get_experiment_nodes(api, exp_id=None, hostname=HOSTNAME):
+def get_experiment_nodes(api, exp_id=None, hostname=None):
     """ Add the nodes from given experiment
     Return the experiment nodes list. Returns an empty list if exp_id is None
     Restrict to the nodes from current site
 
     :raise ValueError: If the experiment is not running,
     """
+    hostname = hostname or HOSTNAME
     # add nodes from experiment
 
     if exp_id is None:
@@ -117,9 +120,10 @@ def get_experiment_nodes(api, exp_id=None, hostname=HOSTNAME):
     return extract_nodes(resources, hostname)
 
 
-def query_nodes(api, exp_id=None, nodes_list_list=None, hostname=HOSTNAME):
+def query_nodes(api, exp_id=None, nodes_list_list=None, hostname=None):
     """ Get nodes list from experiment and/or nodes_list_list.
     Or currently running experiment if none provided """
+    hostname = hostname or HOSTNAME
     nodes_list_list = nodes_list_list or ()
     nodes_list = frozenset(itertools.chain.from_iterable(nodes_list_list))
 
@@ -149,7 +153,9 @@ def add_nodes_selection_parser(parser):
 
     nodes_group.add_argument('-i', '--id', dest='experiment_id', type=int,
                              help='experiment id submission')
-    iotlabcli.parser.common.add_nodes_selection_list(parser)
+    nodes_group.add_argument('-l', '--list', action='append',
+                             type=iotlabcli.parser.common.nodes_list_from_str,
+                             dest='nodes_list', help='nodes list')
 
 
 def get_nodes_selection(username, password, experiment_id, nodes_list,
