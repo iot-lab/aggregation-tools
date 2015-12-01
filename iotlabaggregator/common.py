@@ -92,8 +92,8 @@ def extract_nodes(resources, hostname=None):
     ['m3-1', 'wsn430-4', 'a8-1']
     """
     hostname = hostname or HOSTNAME
-    sites_nodes = [n for n in resources['items'] if n['site'] == hostname]
-    nodes = [n['network_address'].split('.')[0] for n in sites_nodes]
+    sites_nodes = [n for n in resources['items']] # if n['site'] == hostname]
+    nodes = [n['network_address'] for n in sites_nodes]
     return nodes
 
 

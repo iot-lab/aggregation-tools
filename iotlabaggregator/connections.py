@@ -22,16 +22,18 @@
 
 """ Aggregate multiple tcp connections """
 
+import socks
+import socket
+import errno
+
 import os
 import sys
 import asyncore
 from asyncore import dispatcher_with_send
 import threading
-import socket
 import signal
 
 from iotlabaggregator import LOGGER
-
 
 # Use dispatcher_with_send to correctly implement buffered sending
 # either we get 100% CPU as 'writeable' is always 'True
@@ -61,10 +63,53 @@ class Connection(object, dispatcher_with_send):  # pylint:disable=R0904
         LOGGER.info("%s received %u bytes", self.hostname, len(data))
         return ''  # Remaining unprocessed data
 
+    # Overriding 'asyncore' functions
+    def create_socket(self, family, type, proxy_port=None):
+        self.family_and_type = family, type
+        if proxy_port:
+            sock = socks.socksocket(family, type)
+            sock.set_proxy(socks.SOCKS5, 'localhost', proxy_port, rdns=True)
+        else:
+            sock = socket.socket(family, type)
+        #sock.setblocking(0)
+        self.set_socket(sock)
+
+    def connect(self, address):
+        self.connected = False
+        self.connecting = True
+
+        try:
+            # Asyncore is using 'connect_hex' but not supported by PySocks
+            self.socket.connect(address)
+            self.socket.setblocking(0)  # Didn't work with non blocking socket
+        except socks.ProxyConnectionError as err:
+            # Handle 'non blocking socket' but failed
+            sockerr = err.socket_err
+            print sockerr
+            if sockerr.args[0] not in (errno.EINPROGRESS, errno.EALREADY,
+                                   errno.EWOULDBLOCK):
+                raise sockerr
+            print address
+            self.addr = address
+        else:
+            self.addr = address
+            self.handle_connect_event()
+    # End of Overriding 'asyncore' functions
+
     def start(self):
         """ Connects to node serial port """
         self.data_buff = ''      # reset data
-        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        #self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        if 'grenoble' in self.hostname:
+            proxy_port = 1234
+        elif 'strasbourg' in self.hostname:
+            proxy_port = 1236
+        else:
+            proxy_port = None
+        print self.hostname, proxy_port
+
+        self.create_socket(socket.AF_INET, socket.SOCK_STREAM,
+                           proxy_port=proxy_port)
         self.connect((self.hostname, self.port))
 
     def handle_close(self):
@@ -121,7 +166,7 @@ class Aggregator(dict):  # pylint:disable=too-many-public-methods
     def start(self):
         """ Connect all nodes and run asyncore.loop in a thread """
         self._running = True
-        for node in self.itervalues():
+        for node in self.values():
             node.start()
         self.thread.start()
         LOGGER.info("Aggregator started")
@@ -130,7 +175,7 @@ class Aggregator(dict):  # pylint:disable=too-many-public-methods
         """ Stop the nodes connection and stop asyncore.loop thread """
         LOGGER.info("Stopping")
         self._running = False
-        for node in self.itervalues():
+        for node in self.values():
             node.close()
         self.thread.join()
 
@@ -170,5 +215,5 @@ class Aggregator(dict):  # pylint:disable=too-many-public-methods
 
     def broadcast(self, message):
         """ Send a message to all the nodes serial links """
-        for node in self.iterkeys():
+        for node in self.keys():
             self._send(node, message)
