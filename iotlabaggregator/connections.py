@@ -121,7 +121,7 @@ class Aggregator(dict):  # pylint:disable=too-many-public-methods
     def start(self):
         """ Connect all nodes and run asyncore.loop in a thread """
         self._running = True
-        for node in self.itervalues():
+        for node in self.values():
             node.start()
         self.thread.start()
         LOGGER.info("Aggregator started")
@@ -130,7 +130,7 @@ class Aggregator(dict):  # pylint:disable=too-many-public-methods
         """ Stop the nodes connection and stop asyncore.loop thread """
         LOGGER.info("Stopping")
         self._running = False
-        for node in self.itervalues():
+        for node in self.values():
             node.close()
         self.thread.join()
 
@@ -170,5 +170,5 @@ class Aggregator(dict):  # pylint:disable=too-many-public-methods
 
     def broadcast(self, message):
         """ Send a message to all the nodes serial links """
-        for node in self.iterkeys():
+        for node in self.keys():
             self._send(node, message)
