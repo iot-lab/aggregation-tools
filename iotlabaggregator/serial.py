@@ -67,10 +67,9 @@ import logging
 import sys
 import argparse
 
-import iotlabaggregator
-from iotlabaggregator import connections, common
-
 from iotlabcli.parser import common as common_parser
+
+from iotlabaggregator import connections, common, LOG_FMT
 
 
 class SerialConnection(connections.Connection):  # pylint:disable=R0903,R0904
@@ -85,7 +84,7 @@ class SerialConnection(connections.Connection):  # pylint:disable=R0903,R0904
     port = 20000
 
     _line_logger = logging.StreamHandler(sys.stdout)
-    _line_logger.setFormatter(iotlabaggregator.LOG_FMT)
+    _line_logger.setFormatter(LOG_FMT)
     logger = logging.getLogger('SerialConnection')
     logger.setLevel(logging.INFO)
     logger.addHandler(_line_logger)
@@ -203,7 +202,7 @@ class SerialAggregator(connections.Aggregator):
         """
         try:
             nodes_str, message = line.split(';')
-            if '-' == nodes_str:
+            if nodes_str == '-':
                 # -
                 return None, message
 
@@ -218,7 +217,7 @@ class SerialAggregator(connections.Aggregator):
 
             # normalize archi
             archi = archi.lower()
-            archi = 'node-a8' if 'a8' == archi else archi
+            archi = 'node-a8' if archi == 'a8' else archi
 
             # get nodes list
             nodes = common_parser.nodes_id_list(archi, list_str)

@@ -30,8 +30,7 @@ import argparse
 import sys
 import logging
 
-import iotlabaggregator
-from iotlabaggregator import connections, common, zeptopcap
+from iotlabaggregator import connections, common, zeptopcap, LOGGER
 
 
 class SnifferConnection(connections.Connection):
@@ -57,8 +56,7 @@ class SnifferConnection(connections.Connection):
 
             # Extract packet
             pkt, data = data[:full_len], data[full_len:]
-            iotlabaggregator.LOGGER.debug('%s;Packet received len: %d',
-                                          self.hostname, full_len)
+            LOGGER.debug('%s;Packet received len: %d', self.hostname, full_len)
             self.pkt_handler(pkt)
             self.aggregator.rx_packets += 1
 
@@ -140,12 +138,11 @@ def main(args=None):
         # Parse arguments
         nodes_list = SnifferAggregator.select_nodes(opts)
         if opts.debug:
-            iotlabaggregator.LOGGER.setLevel(logging.DEBUG)
+            LOGGER.setLevel(logging.DEBUG)
         # Run the aggregator
         with SnifferAggregator(nodes_list, opts.outfd, opts.raw) as aggregator:
             aggregator.run()
-            iotlabaggregator.LOGGER.info('%u packets captured',
-                                         aggregator.rx_packets)
+            LOGGER.info('%u packets captured', aggregator.rx_packets)
     except (ValueError, RuntimeError) as err:
         sys.stderr.write("%s\n" % err)
         exit(1)

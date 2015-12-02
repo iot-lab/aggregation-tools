@@ -192,7 +192,7 @@ class ZepPcap(object):  # pylint:disable=too-few-public-methods
     @staticmethod
     def _ip_checksum(hdr):
         """ Calculate the ip checksum for given header """
-        assert 0 == (len(hdr) % 2)  # hdr has even length
+        assert (len(hdr) % 2) == 0  # hdr has even length
         word_pack = struct.Struct('!H')
 
         # Sum all 16bits

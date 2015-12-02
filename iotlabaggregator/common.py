@@ -24,11 +24,12 @@
 """ Common functions that may be required """
 import os
 import itertools
-import iotlabaggregator
 import iotlabcli
 from iotlabcli import experiment
 import iotlabcli.parser.common
 import iotlabcli.parser.node
+
+import iotlabaggregator
 
 HOSTNAME = os.uname()[1]
 
@@ -112,7 +113,7 @@ def get_experiment_nodes(api, exp_id=None, hostname=None):
 
     # Check that the experiment is running
     state = experiment.get_experiment(api, exp_id, 'state')["state"]
-    if 'Running' != state:
+    if state != 'Running':
         raise RuntimeError("Experiment %u not running '%s'" % (exp_id, state))
 
     # Check that the experiment is running
