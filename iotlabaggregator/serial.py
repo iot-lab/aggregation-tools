@@ -67,6 +67,22 @@ import logging
 import sys
 import argparse
 
+try:
+    from colorama import init, Fore
+    init()
+    COLOR = [Fore.BLACK, Fore.RED, Fore.GREEN, Fore.YELLOW, Fore.BLUE,
+             Fore.MAGENTA, Fore.CYAN, Fore.WHITE]
+    COLOR_RESET = Fore.RESET
+
+    def color_idx(s):
+        return sum(ord(c) for c in s)
+except ImportError:
+    COLOR = ['']
+    COLOR_RESET = ''
+
+    def color_idx(s):
+        return 0
+
 from iotlabcli.parser import common as common_parser
 
 from iotlabaggregator import connections, common, LOG_FMT
@@ -115,7 +131,8 @@ class SerialConnection(connections.Connection):  # pylint:disable=R0903,R0904
 
     def print_line(self, identifier, line):
         """ Print one line prefixed by id in format: """
-        self.logger.info("%s;%s", identifier, line)
+        self.logger.info("%s%s;%s%s", COLOR[color_idx(identifier) % len(COLOR)],
+                         identifier, line, COLOR_RESET)
 
 
 class SerialAggregator(connections.Aggregator):
