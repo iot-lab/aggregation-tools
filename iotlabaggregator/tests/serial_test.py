@@ -90,3 +90,13 @@ class TestSelectNodes(unittest.TestCase):
             ['-l', 'grenoble,m3,1', '-l', 'lille,wsn430,1'])
         nodes_list = serial.SerialAggregator.select_nodes(opts)
         self.assertEqual(['m3-1'], nodes_list)
+
+
+class TestColor(unittest.TestCase):
+
+    def test_has_color(self):
+        # pylint:disable=import-error
+        if serial.HAS_COLOR:
+            import colorama as _  # noqa
+        else:
+            self.assertRaises(ImportError, __import__, 'colorama')
