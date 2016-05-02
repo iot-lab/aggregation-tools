@@ -67,9 +67,41 @@ import logging
 import sys
 import argparse
 
+
 from iotlabcli.parser import common as common_parser
 
 from iotlabaggregator import connections, common, LOG_FMT
+
+try:
+    import colorama  # pylint:disable=import-error
+    HAS_COLOR = True
+except ImportError:
+    HAS_COLOR = False
+
+
+# Declare color specific functions
+if HAS_COLOR:
+    colorama.init()
+    _COLOR = [colorama.Fore.BLACK, colorama.Fore.RED,
+              colorama.Fore.GREEN, colorama.Fore.YELLOW,
+              colorama.Fore.BLUE, colorama.Fore.MAGENTA,
+              colorama.Fore.CYAN, colorama.Fore.WHITE]
+    COLOR_RESET = str(colorama.Fore.RESET)
+
+    def _color_hash(string):
+        """Return a hash of the string."""
+        return sum(ord(c) for c in string)
+
+    def color_str(string):
+        """Return color string character for identifier."""
+        color_idx = _color_hash(string) % len(_COLOR)
+        return str(_COLOR[color_idx])
+else:
+    COLOR_RESET = ''
+
+    def color_str(_):
+        """No color."""
+        return ''
 
 
 class SerialConnection(connections.Connection):  # pylint:disable=R0903,R0904
@@ -89,8 +121,9 @@ class SerialConnection(connections.Connection):  # pylint:disable=R0903,R0904
     logger.setLevel(logging.INFO)
     logger.addHandler(_line_logger)
 
-    def __init__(self, hostname, aggregator,
-                 print_lines=False, line_handler=None):
+    def __init__(self,  # pylint:disable=too-many-arguments
+                 hostname, aggregator,
+                 print_lines=False, line_handler=None, color=False):
         super(SerialConnection, self).__init__(hostname, aggregator)
 
         self.line_handler = common.Event()
@@ -98,6 +131,11 @@ class SerialConnection(connections.Connection):  # pylint:disable=R0903,R0904
             self.line_handler.append(self.print_line)
         if line_handler:
             self.line_handler.append(line_handler)
+
+        self.fmt = '%s;%s'
+        if color:
+            self.fmt = '%s%s%s' % (color_str(self.hostname),
+                                   self.fmt, COLOR_RESET)
 
     def handle_data(self, data):
         """ Print the data received line by line """
@@ -115,7 +153,7 @@ class SerialConnection(connections.Connection):  # pylint:disable=R0903,R0904
 
     def print_line(self, identifier, line):
         """ Print one line prefixed by id in format: """
-        self.logger.info("%s;%s", identifier, line)
+        self.logger.info(self.fmt, identifier, line)
 
 
 class SerialAggregator(connections.Aggregator):
@@ -128,6 +166,14 @@ class SerialAggregator(connections.Aggregator):
         '--with-a8', action='store_true',
         help=('redirect open-a8 serial port. ' +
               '`/etc/init.d/serial_redirection` must be running on the nodes'))
+
+    # Add 'opts.color' no error if no available
+    parser.set_defaults(color=False)
+    if HAS_COLOR:
+        parser.add_argument(
+            '--color', action='store_true', default=False,
+            help='Add color to node lines.',
+        )
 
     @staticmethod
     def select_nodes(opts):
@@ -235,7 +281,8 @@ def main(args=None):
         # Parse arguments
         nodes_list = SerialAggregator.select_nodes(opts)
         # Run the aggregator
-        with SerialAggregator(nodes_list, print_lines=True) as aggregator:
+        with SerialAggregator(nodes_list, print_lines=True,
+                              color=opts.color) as aggregator:
             aggregator.run()
     except (ValueError, RuntimeError) as err:
         sys.stderr.write("%s\n" % err)
