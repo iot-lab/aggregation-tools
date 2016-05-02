@@ -87,5 +87,5 @@ Basic usage from the ssh fronted
 Connecting to your computer wireshark using pipes
 
     # Connect the output to your PC wireshark
-    you@yourpc $ ssh <user>@<site> 'serial_aggregator -o -' | wireshark -k -i -
+    you@yourpc $ ssh <user>@<site> 'sniffer_aggregator -o -' | wireshark -k -i -
 
