@@ -164,5 +164,6 @@ def get_nodes_selection(username, password, experiment_id, nodes_list,
     """ Return the requested nodes from 'experiment_id', and 'nodes_list """
     username, password = iotlabcli.get_user_credentials(username, password)
     api = iotlabcli.Api(username, password)
-    nodes = query_nodes(api, experiment_id, nodes_list)
+    with iotlabcli.parser.common.catch_missing_auth_cli():
+        nodes = query_nodes(api, experiment_id, nodes_list)
     return nodes

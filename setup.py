@@ -64,6 +64,6 @@ setup(
                  'Intended Audience :: End Users/Desktop',
                  'Environment :: Console',
                  'Topic :: Utilities', ],
-    install_requires=['iotlabcli>=1.6.0'],
+    install_requires=['iotlabcli>=2.1.0'],
     extras_require={'color_serial': ['colorama>=0.3.7']},
 )

@@ -21,8 +21,11 @@
 # knowledge of the CeCILL license and that you accept its terms.
 
 # pylint:disable=missing-docstring
+# pylint:disable=invalid-name
 
 import unittest
+from cStringIO import StringIO
+from urllib2 import HTTPError
 from mock import patch
 
 from iotlabaggregator import common
@@ -101,3 +104,17 @@ class TestCommonFunctions(unittest.TestCase):
                                          experiment_id=None, nodes_list=())
         self.assertEqual(['a8-1', 'm3-1'], ret)
         query_nodes.assert_called_with(api.return_value, None, ())
+
+    @patch('iotlabcli.get_user_credentials')
+    @patch('iotlabaggregator.common.query_nodes')
+    def test_get_nodes_selection_http_error(self, query_nodes, get_user):
+        get_user.return_value = ('user', 'password')
+        query_nodes.side_effect = HTTPError('url', 401, 'Unauthorized',
+                                            hdrs=None, fp=None)
+        stderr = StringIO()
+        with patch('sys.stderr', stderr):
+            self.assertRaises(SystemExit, common.get_nodes_selection,
+                              username=None, password=None,
+                              experiment_id=None, nodes_list=())
+        self.assertTrue('Register your login:password using `auth-cli`'
+                        in stderr.getvalue())
