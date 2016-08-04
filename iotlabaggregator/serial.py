@@ -72,12 +72,19 @@ from iotlabcli.parser import common as common_parser
 
 from iotlabaggregator import connections, common, LOG_FMT
 
+# pylint: disable=wrong-import-order
+try:
+    # pylint: disable=import-error,no-name-in-module
+    from urllib.error import HTTPError
+except ImportError:  # pragma: no cover
+    # pylint: disable=import-error,no-name-in-module
+    from urllib2 import HTTPError
+
 try:
     import colorama  # pylint:disable=import-error
     HAS_COLOR = True
 except ImportError:
     HAS_COLOR = False
-
 
 # Declare color specific functions
 if HAS_COLOR:
@@ -286,4 +293,11 @@ def main(args=None):
             aggregator.run()
     except (ValueError, RuntimeError) as err:
         sys.stderr.write("%s\n" % err)
+        exit(1)
+    except HTTPError as err:  # should be first as it's an IOError
+        if err.code == 401:
+            # print an info on how to get rid of the error
+            err = ("HTTP Error 401: Unauthorized: Wrong login/password\n\n"
+                   "\tRegister your login:password using `auth-cli`\n")
+        sys.stderr.write("{0}\n".format(err))
         exit(1)
