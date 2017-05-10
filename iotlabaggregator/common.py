@@ -130,7 +130,7 @@ def query_nodes(api, exp_id=None, nodes_list_list=None, hostname=None):
 
     nodes = set()
     # no nodes supplied, try to get currently running experiment
-    if exp_id is None and not len(nodes_list):
+    if exp_id is None and not nodes_list:
         exp_id = iotlabcli.get_current_experiment(api)
 
     # add nodes from experiment, empty if exp_id is None
