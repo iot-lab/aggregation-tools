@@ -14,6 +14,7 @@ files_list=$(echo "${files_list}" | grep -v \
     -e '.md$' \
     -e 'AUTHORS' \
     -e 'COPYING' \
+    -e '.travis.yml' \
 )
 
 # Verify that 'AUTHORS' and 'COPYING' files exist
