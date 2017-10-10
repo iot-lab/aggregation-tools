@@ -1,7 +1,7 @@
-nose
-nosexcover
+pytest
+pytest-pep8
+pytest-cov
 mock
-setuptools-pep8
 setuptools-lint
 # issues with pep8 >= 1.6
 flake8==2.3.0
