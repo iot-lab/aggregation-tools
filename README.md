@@ -1,6 +1,8 @@
 IoT-Lab Aggregation tools
 =========================
 
+[![Build Status](https://travis-ci.org/iot-lab/aggregation-tools.svg?branch=master)](https://travis-ci.org/iot-lab/aggregation-tools)
+
 Tools that allow aggregating data results from many nodes at a time.
 It connects to several tcp connections and handle the received data.
 
