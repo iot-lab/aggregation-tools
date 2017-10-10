@@ -14,3 +14,8 @@ nosetests.xml
 cover/
 
 *.pcap
+
+# pytest
+.cache
+test-report.xml
+htmlcov/
