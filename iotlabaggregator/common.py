@@ -114,7 +114,8 @@ def get_experiment_nodes(api, exp_id=None, hostname=None):
     # Check that the experiment is running
     state = experiment.get_experiment(api, exp_id, 'state')["state"]
     if state != 'Running':
-        raise RuntimeError("Experiment %u not running '%s'" % (exp_id, state))
+        raise RuntimeError("Experiment {} not running '{}'"
+                           .format(exp_id, state))
 
     # Check that the experiment is running
     resources = experiment.get_experiment(api, exp_id, 'resources')
