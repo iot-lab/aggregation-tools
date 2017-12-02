@@ -144,5 +144,5 @@ def main(args=None):
             aggregator.run()
             LOGGER.info('%u packets captured', aggregator.rx_packets)
     except (ValueError, RuntimeError) as err:
-        sys.stderr.write("%s\n" % err)
+        sys.stderr.write("{}\n".format(err))
         exit(1)
