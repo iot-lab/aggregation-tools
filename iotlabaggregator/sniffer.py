@@ -117,6 +117,7 @@ class SnifferAggregator(connections.Aggregator):
         help="Extract payload and no encapsulation. For foren6.")
 
     def __init__(self, nodes_list, outfd, raw=False, *args, **kwargs):
+        # pylint: disable=keyword-arg-before-vararg
         zep_pcap = zeptopcap.ZepPcap(outfd, raw)
         super(SnifferAggregator, self).__init__(
             nodes_list, pkt_handler=zep_pcap.write, *args, **kwargs)

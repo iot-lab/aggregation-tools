@@ -63,8 +63,7 @@ class TestSelectNodes(unittest.TestCase):
                  'site': 'grenoble'},
             ]}
             return resources
-        else:
-            self.fail()
+        return self.fail()
 
     @mock.patch('iotlabaggregator.common.HOSTNAME', 'grenoble')
     def test_no_args(self):
