@@ -116,5 +116,5 @@ class TestCommonFunctions(unittest.TestCase):
             self.assertRaises(SystemExit, common.get_nodes_selection,
                               username=None, password=None,
                               experiment_id=None, nodes_list=())
-        self.assertTrue('Register your login:password using `auth-cli`'
+        self.assertTrue('Register your login:password using `iotlab-auth`'
                         in stderr.getvalue())
