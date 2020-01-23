@@ -44,7 +44,6 @@ class SnifferConnection(connections.Connection):
 
     def handle_data(self, data):
         """ Print the data received line by line """
-
         while True:
             data = self._strip_until_pkt_start(data)
             if not data.startswith('EX\2') or len(data) < self.ZEP_HDR_LEN:
@@ -146,4 +145,4 @@ def main(args=None):
             LOGGER.info('%u packets captured', aggregator.rx_packets)
     except (ValueError, RuntimeError) as err:
         sys.stderr.write("{}\n".format(err))
-        exit(1)
+        sys.exit(1)

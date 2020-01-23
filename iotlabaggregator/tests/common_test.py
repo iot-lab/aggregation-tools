@@ -24,8 +24,8 @@
 # pylint:disable=invalid-name
 
 import unittest
-from cStringIO import StringIO
-from urllib2 import HTTPError
+from io import StringIO
+from urllib.error import HTTPError
 from mock import patch
 
 from iotlabaggregator import common

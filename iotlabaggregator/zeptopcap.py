@@ -28,9 +28,10 @@
 
 import sys
 import struct
+import binascii
 
 
-class ZepPcap(object):  # pylint:disable=too-few-public-methods
+class ZepPcap():  # pylint:disable=too-few-public-methods
     """ Zep to Pcap converter
     On `write` encapsulate the message as a zep packet in `outfile` pcap format
     """
@@ -224,7 +225,6 @@ class ZepPcap(object):  # pylint:disable=too-few-public-methods
 def main():
     """ Main function """
 
-    import binascii
     zep_message_str = (
         '45 58 02 01'   # Base Zep header
         '0B 00 01 00 ff'   # chan | dev_id | dev_id| LQI/CRC_MODE |  LQI

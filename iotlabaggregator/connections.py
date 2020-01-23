@@ -40,7 +40,7 @@ from iotlabaggregator import LOGGER
 # Found dispatcher_with_send in the asyncore code
 
 
-class Connection(object, dispatcher_with_send):  # pylint:disable=R0904
+class Connection(dispatcher_with_send):  # pylint:disable=R0904
     """
     Handle the connection to one node
     Data is managed with asyncore. So to work asyncore.loop() should be run.
@@ -77,7 +77,7 @@ class Connection(object, dispatcher_with_send):  # pylint:disable=R0904
 
     def handle_read(self):
         """ Append read bytes to buffer and run data handler. """
-        self.data_buff += self.recv(8192)
+        self.data_buff += (self.recv(8192)).decode('utf-8-', 'replace')
         self.data_buff = self.handle_data(self.data_buff)
 
     def handle_error(self):
