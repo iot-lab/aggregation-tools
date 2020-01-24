@@ -77,7 +77,7 @@ class Connection(dispatcher_with_send):  # pylint:disable=R0904
 
     def handle_read(self):
         """ Append read bytes to buffer and run data handler. """
-        self.data_buff += (self.recv(8192)).decode('utf-8-', 'replace')
+        self.data_buff += self.recv(8192).decode()
         self.data_buff = self.handle_data(self.data_buff)
 
     def handle_error(self):
@@ -162,7 +162,7 @@ class Aggregator(dict):  # pylint:disable=too-many-public-methods
     def _send(self, hostname, message):
         """ Safe send message to node """
         try:
-            self[hostname].send(message)
+            self[hostname].send(message.encode())
         except KeyError:
             LOGGER.warning("Node not managed: %s", hostname)
         except socket.error:

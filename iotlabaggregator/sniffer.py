@@ -61,6 +61,12 @@ class SnifferConnection(connections.Connection):
 
         return data
 
+    def handle_read(self):
+        """ Append read bytes to buffer and run data handler. """
+        # Sniffer UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff
+        self.data_buff += self.recv(8192).decode('latin-1')
+        self.data_buff = self.handle_data(self.data_buff)
+
     @staticmethod
     def _strip_until_pkt_start(msg):
         """

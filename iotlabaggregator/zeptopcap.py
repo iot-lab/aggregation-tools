@@ -62,11 +62,13 @@ class ZepPcap():  # pylint:disable=too-few-public-methods
 
         # Write global header
         hdr = self._main_pcap_header(link)
+
         self.out.write(hdr)
         self.out.flush()
 
     def _write_zep(self, packet):
         """ Encapsulate ZEP data in pcap outfile """
+        packet = packet.encode('latin-1')
         timestamp = self._timestamp(packet)
 
         # Calculate all headers
@@ -94,6 +96,7 @@ class ZepPcap():  # pylint:disable=too-few-public-methods
 
     def _write_raw(self, packet):
         """ Only write the ZEP payload as pcap"""
+        packet = packet.encode('latin-1')
         timestamp = self._timestamp(packet)
 
         # extract payload from zep encapsulated data
@@ -185,7 +188,7 @@ class ZepPcap():  # pylint:disable=too-few-public-methods
         4B - Actual lengt of packet: pkt_len
         """
 
-        hdr_struct = struct.Struct('=LLLL')
+        hdr_struct = struct.Struct('=LfLL')
         pcap_len = pkt_len
         pcap_hdr = hdr_struct.pack(t_s, t_us, pcap_len, pcap_len)
         return pcap_hdr
