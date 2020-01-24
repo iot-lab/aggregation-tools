@@ -107,13 +107,23 @@ class SnifferAggregator(connections.Aggregator):
     """ Aggregator for the Sniffer """
     connection_class = SnifferConnection
 
+    class CustomFileType(argparse.FileType):
+        """ Custom FileType class to fix argparse bug with
+        write binary mode ('wb') and stdout ('-')
+        https://bugs.python.org/issue14156
+        """
+        def __call__(self, string):
+            if string == '-' and 'w' in self._mode:
+                return sys.stdout.buffer
+            return super().__call__(string)
+
     parser = argparse.ArgumentParser()
     common.add_nodes_selection_parser(parser)
     _output = parser.add_argument_group("Sniffer output")
     _output.add_argument(
         '-o', '--outfile', metavar='PCAP_FILE', dest='outfd',
-        type=argparse.FileType('wb'), required=True,
-        help="Pcap outfile. Use '-' for stdout.")
+        type=CustomFileType('wb'), required=True,
+        help="Pcap outfile path. Use '-' for stdout.")
     _output.add_argument(
         '-d', '--debug', action='store_true', default=False,
         help="Print debug on received packets")
