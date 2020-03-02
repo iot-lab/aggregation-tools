@@ -54,8 +54,8 @@ class TestCommonFunctions(unittest.TestCase):
 
         # Already terminated experiment
         get_exp.side_effect = (
-            lambda a, e, req: {'state': {'state': 'Running'},
-                               'resources': resources}[req])
+            lambda a, e, req: {'': {'state': 'Running'},
+                               'nodes': resources}[req])
         self.assertEqual(['m3-1', 'wsn430-4', 'a8-1'],
                          common.get_experiment_nodes(api, 123, 'grenoble'))
         get_exp.side_effect = None
