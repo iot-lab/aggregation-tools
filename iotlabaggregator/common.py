@@ -112,14 +112,14 @@ def get_experiment_nodes(api, exp_id=None, hostname=None):
         return []
 
     # Check that the experiment is running
-    state = experiment.get_experiment(api, exp_id, 'state')["state"]
+    state = experiment.get_experiment(api, exp_id, '')["state"]
     if state != 'Running':
         raise RuntimeError("Experiment {} not running '{}'"
                            .format(exp_id, state))
 
-    # Check that the experiment is running
-    resources = experiment.get_experiment(api, exp_id, 'resources')
-    return extract_nodes(resources, hostname)
+    # Get experiment nodes
+    nodes = experiment.get_experiment(api, exp_id, 'nodes')
+    return extract_nodes(nodes, hostname)
 
 
 def query_nodes(api, exp_id=None, nodes_list_list=None, hostname=None):

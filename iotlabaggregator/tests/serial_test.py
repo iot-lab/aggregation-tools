@@ -47,9 +47,9 @@ class TestSelectNodes(unittest.TestCase):
 
     def _get_exp(self, _api, _exp_id,  # pylint:disable=unused-argument
                  option=''):
-        if option == 'state':
+        if option == '':
             return {'state': 'Running'}
-        elif option == 'resources':
+        elif option == 'nodes':
             resources = {"items": [
                 {'network_address': 'm3-1.grenoble.iot-lab.info',
                  'site': 'grenoble'},
