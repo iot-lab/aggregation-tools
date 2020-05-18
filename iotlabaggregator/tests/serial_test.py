@@ -94,7 +94,7 @@ class TestSelectNodes(unittest.TestCase):
 class TestColor(unittest.TestCase):
 
     def test_has_color(self):
-        # pylint:disable=import-error,import-outside-toplevel
+        # pylint:disable=bad-option-value,import-error,import-outside-toplevel
         if serial.HAS_COLOR:
             import colorama as _  # noqa
         else:

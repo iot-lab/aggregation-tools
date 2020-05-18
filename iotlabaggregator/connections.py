@@ -39,8 +39,8 @@ from iotlabaggregator import LOGGER
 #     python-asyncore-using-100-cpu-after-client-connects
 # Found dispatcher_with_send in the asyncore code
 
-
-class Connection(dispatcher_with_send):  # pylint:disable=R0904
+# pylint:disable=bad-option-value,R0904,R0205
+class Connection(dispatcher_with_send, object):
     """
     Handle the connection to one node
     Data is managed with asyncore. So to work asyncore.loop() should be run.
@@ -49,6 +49,7 @@ class Connection(dispatcher_with_send):  # pylint:disable=R0904
     """
     port = 20000
 
+    # pylint:disable=bad-option-value,super-on-old-class
     def __init__(self, hostname, aggregator):
         super(Connection, self).__init__()
         dispatcher_with_send.__init__(self)

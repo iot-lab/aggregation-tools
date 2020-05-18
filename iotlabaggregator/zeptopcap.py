@@ -31,7 +31,8 @@ import struct
 import binascii
 
 
-class ZepPcap():  # pylint:disable=too-few-public-methods
+# pylint:disable=bad-option-value,too-few-public-methods,old-style-class
+class ZepPcap():
     """ Zep to Pcap converter
     On `write` encapsulate the message as a zep packet in `outfile` pcap format
     """

@@ -38,6 +38,7 @@ class SnifferConnection(connections.Connection):
     port = 30000
     ZEP_HDR_LEN = zeptopcap.ZepPcap.ZEP_HDR_LEN
 
+    # pylint:disable=bad-option-value,super-on-old-class
     def __init__(self, hostname, aggregator, pkt_handler):
         super(SnifferConnection, self).__init__(hostname, aggregator)
         self.pkt_handler = pkt_handler
@@ -107,6 +108,7 @@ class SnifferAggregator(connections.Aggregator):
     """ Aggregator for the Sniffer """
     connection_class = SnifferConnection
 
+    # pylint:disable=bad-option-value,missing-super-argument,no-member
     class CustomFileType(argparse.FileType):
         """ Custom FileType class to fix argparse bug with
         write binary mode ('wb') and stdout ('-')
