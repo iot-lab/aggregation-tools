@@ -2,8 +2,8 @@ language: python
 
 matrix:
   include:
-    - python: 3.4
-      env: TOXENV="py34-tests,cli"
+    - python: 2.7
+      env: TOXENV="copying,py27-tests,coverage,py27-lint,cli"
     - python: 3.5
       env: TOXENV="copying,py35-tests,coverage,py35-lint,cli"
     - python: 3.6
