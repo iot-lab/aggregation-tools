@@ -146,8 +146,7 @@ class SerialConnection(connections.Connection):  # pylint:disable=R0903,R0904
         data = ''
         for line in lines:
             if line[-1] == '\n':
-                # Handle Unicode.
-                line = line[:-1].decode('utf-8-', 'replace')
+                line = line[:-1]
                 self.line_handler(self.hostname, line)
             else:
                 data = line  # last incomplete line

@@ -78,7 +78,8 @@ class Connection(dispatcher_with_send, object):
 
     def handle_read(self):
         """ Append read bytes to buffer and run data handler. """
-        self.data_buff += self.recv(8192).decode()
+        # Handle Unicode.
+        self.data_buff += self.recv(8192).decode('utf-8-', 'replace')
         self.data_buff = self.handle_data(self.data_buff)
 
     def handle_error(self):
