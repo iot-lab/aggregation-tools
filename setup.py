@@ -69,6 +69,6 @@ setup(
                  'Intended Audience :: End Users/Desktop',
                  'Environment :: Console',
                  'Topic :: Utilities', ],
-    install_requires=['iotlabcli>=2.2.1', 'chardet'],
+    install_requires=['iotlabcli>=2.2.1', 'chardet', 'future'],
     extras_require={'color_serial': ['colorama>=0.3.7']},
 )

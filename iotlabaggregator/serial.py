@@ -61,6 +61,7 @@ For multi-sites experiments, you should run the script on each site server.
 # pylint:disable=too-many-public-methods
 
 # use readline for 'raw_input'
+from builtins import input
 import readline  # noqa  # pylint:disable=unused-import
 
 import logging
