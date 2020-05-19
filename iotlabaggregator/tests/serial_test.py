@@ -49,7 +49,7 @@ class TestSelectNodes(unittest.TestCase):
                  option=''):
         if option == '':
             return {'state': 'Running'}
-        elif option == 'nodes':
+        if option == 'nodes':
             resources = {"items": [
                 {'network_address': 'm3-1.grenoble.iot-lab.info',
                  'site': 'grenoble'},
