@@ -122,10 +122,17 @@ class SnifferAggregator(connections.Aggregator):
     parser = argparse.ArgumentParser()
     common.add_nodes_selection_parser(parser)
     _output = parser.add_argument_group("Sniffer output")
-    _output.add_argument(
-        '-o', '--outfile', metavar='PCAP_FILE', dest='outfd',
-        type=CustomFileType('wb'), required=True,
-        help="Pcap outfile path. Use '-' for stdout.")
+    # Python3 fix
+    if sys.version_info[0] > 2:
+        _output.add_argument(
+            '-o', '--outfile', metavar='PCAP_FILE', dest='outfd',
+            type=CustomFileType('wb'), required=True,
+            help="Pcap outfile path. Use '-' for stdout.")
+    else:
+        _output.add_argument(
+            '-o', '--outfile', metavar='PCAP_FILE', dest='outfd',
+            type=argparse.FileType('wb'), required=True,
+            help="Pcap outfile path. Use '-' for stdout.")
     _output.add_argument(
         '-d', '--debug', action='store_true', default=False,
         help="Print debug on received packets")
