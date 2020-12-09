@@ -49,7 +49,7 @@ class TestSelectNodes(unittest.TestCase):
                  option=''):
         if option == '':
             return {'state': 'Running'}
-        elif option == 'nodes':
+        if option == 'nodes':
             resources = {"items": [
                 {'network_address': 'm3-1.grenoble.iot-lab.info',
                  'site': 'grenoble'},
@@ -94,7 +94,7 @@ class TestSelectNodes(unittest.TestCase):
 class TestColor(unittest.TestCase):
 
     def test_has_color(self):
-        # pylint:disable=import-error
+        # pylint:disable=bad-option-value,import-error,import-outside-toplevel
         if serial.HAS_COLOR:
             import colorama as _  # noqa
         else:

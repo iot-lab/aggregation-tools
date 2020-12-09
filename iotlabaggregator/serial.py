@@ -61,6 +61,7 @@ For multi-sites experiments, you should run the script on each site server.
 # pylint:disable=too-many-public-methods
 
 # use readline for 'raw_input'
+from builtins import input
 import readline  # noqa  # pylint:disable=unused-import
 
 import logging
@@ -121,7 +122,8 @@ class SerialConnection(connections.Connection):  # pylint:disable=R0903,R0904
     logger.setLevel(logging.INFO)
     logger.addHandler(_line_logger)
 
-    def __init__(self,  # pylint:disable=too-many-arguments
+    # pylint:disable=bad-option-value,too-many-arguments,super-on-old-class
+    def __init__(self,
                  hostname, aggregator,
                  print_lines=False, line_handler=None, color=False):
         super(SerialConnection, self).__init__(hostname, aggregator)
@@ -144,8 +146,7 @@ class SerialConnection(connections.Connection):  # pylint:disable=R0903,R0904
         data = ''
         for line in lines:
             if line[-1] == '\n':
-                # Handle Unicode.
-                line = line[:-1].decode('utf-8-', 'replace')
+                line = line[:-1]
                 self.line_handler(self.hostname, line)
             else:
                 data = line  # last incomplete line
@@ -198,7 +199,7 @@ class SerialAggregator(connections.Aggregator):
     def read_input(self):
         """ Read input and sends the messages to the given nodes """
         while True:
-            line = raw_input()
+            line = input()
             nodes, message = self.extract_nodes_and_message(line)
 
             if (None, '') != (nodes, message):
@@ -286,4 +287,4 @@ def main(args=None):
             aggregator.run()
     except (ValueError, RuntimeError) as err:
         sys.stderr.write("%s\n" % err)
-        exit(1)
+        sys.exit(1)

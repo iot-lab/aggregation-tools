@@ -1,8 +1,15 @@
 language: python
 
-python: 2.7
-
-env: TOXENV="copying,py27,py27-color,cli,coverage"
+matrix:
+  include:
+    - python: 2.7
+      env: TOXENV="copying,py27-tests,coverage,py27-lint,cli"
+    - python: 3.5
+      env: TOXENV="copying,py35-tests,coverage,py35-lint,cli"
+    - python: 3.6
+      env: TOXENV="py36-tests,cli"
+    - python: 3.7
+      env: TOXENV="py37-tests,cli"
 
 before_install:
   - pip install tox

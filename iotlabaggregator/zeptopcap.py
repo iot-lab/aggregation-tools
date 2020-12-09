@@ -28,9 +28,11 @@
 
 import sys
 import struct
+import binascii
 
 
-class ZepPcap(object):  # pylint:disable=too-few-public-methods
+# pylint:disable=bad-option-value,too-few-public-methods,old-style-class
+class ZepPcap():
     """ Zep to Pcap converter
     On `write` encapsulate the message as a zep packet in `outfile` pcap format
     """
@@ -61,11 +63,13 @@ class ZepPcap(object):  # pylint:disable=too-few-public-methods
 
         # Write global header
         hdr = self._main_pcap_header(link)
+
         self.out.write(hdr)
         self.out.flush()
 
     def _write_zep(self, packet):
         """ Encapsulate ZEP data in pcap outfile """
+        packet = packet.encode('latin-1')
         timestamp = self._timestamp(packet)
 
         # Calculate all headers
@@ -93,6 +97,7 @@ class ZepPcap(object):  # pylint:disable=too-few-public-methods
 
     def _write_raw(self, packet):
         """ Only write the ZEP payload as pcap"""
+        packet = packet.encode('latin-1')
         timestamp = self._timestamp(packet)
 
         # extract payload from zep encapsulated data
@@ -184,7 +189,7 @@ class ZepPcap(object):  # pylint:disable=too-few-public-methods
         4B - Actual lengt of packet: pkt_len
         """
 
-        hdr_struct = struct.Struct('=LLLL')
+        hdr_struct = struct.Struct('=LfLL')
         pcap_len = pkt_len
         pcap_hdr = hdr_struct.pack(t_s, t_us, pcap_len, pcap_len)
         return pcap_hdr
@@ -224,7 +229,6 @@ class ZepPcap(object):  # pylint:disable=too-few-public-methods
 def main():
     """ Main function """
 
-    import binascii
     zep_message_str = (
         '45 58 02 01'   # Base Zep header
         '0B 00 01 00 ff'   # chan | dev_id | dev_id| LQI/CRC_MODE |  LQI

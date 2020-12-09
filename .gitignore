@@ -6,7 +6,7 @@ MANIFEST
 *.egg-info
 .tox
 
-*.egg
+*.eggs
 *.swp
 .coverage
 coverage.xml

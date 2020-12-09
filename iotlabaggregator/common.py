@@ -43,9 +43,9 @@ class Event(list):  # pylint:disable=too-few-public-methods
 
     Example Usage:
     >>> def f(x):
-    ...     print 'f(%s)' % x
+    ...     print('f(%s)' % x)
     >>> def g(x):
-    ...     print 'g(%s)' % x
+    ...     print('g(%s)' % x)
 
     >>> e = Event()
     >>> e()

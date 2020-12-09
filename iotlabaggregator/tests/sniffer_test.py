@@ -22,7 +22,9 @@
 
 # pylint:disable=missing-docstring
 
+from __future__ import print_function
 import unittest
+import binascii
 from mock import patch, Mock
 
 from iotlabaggregator import sniffer
@@ -30,7 +32,7 @@ from iotlabaggregator import sniffer
 
 class TestSnifferHandleRead(unittest.TestCase):
     """ Test the packet reading code """
-    import binascii
+
     zep_message = binascii.a2b_hex(''.join((
         '45 58 02 01'   # Base Zep header
         '0B 00 01 00 ff'   # chan | dev_id | dev_id| LQI/CRC_MODE |  LQI
@@ -65,11 +67,12 @@ class TestSnifferHandleRead(unittest.TestCase):
         sniff.recv = Mock(side_effect=recv)
         sniff.handle_read()
         sniff.handle_read()
-        self.outfd.write.assert_called_with(self.zep_message)
+        msg = self.zep_message.decode('latin-1')
+        self.outfd.write.assert_called_with(msg)
 
     def test_invalid_data_start(self):
         def recv(_):
-            return 'invaEEEXlidE_data' + self.zep_message
+            return b'invaEEEXlidE_data' + self.zep_message
 
         aggregator = Mock()
         aggregator.rx_packets = 0
@@ -80,21 +83,22 @@ class TestSnifferHandleRead(unittest.TestCase):
         sniff.handle_read()
 
         self.assertEqual(2, self.outfd.write.call_count)
-        self.outfd.write.assert_called_with(self.zep_message)
+        msg = (self.zep_message).decode('latin-1')
+        self.outfd.write.assert_called_with(msg)
 
     def test_read_ret_values(self):
         for i in range(1, 100):
             self.outfd.reset_mock()
-            print i
+            print(i)
             self.read_return_n_char_per_call(i)
 
     def read_return_n_char_per_call(self, num_chars):
-        msg = list(self.zep_message * 10)
+        msg = list((self.zep_message).decode('latin-1') * 10)
 
         def recv(_):
             ret = msg[0:num_chars]
             del msg[0:num_chars]
-            return ''.join(ret)
+            return (''.join(ret)).encode('latin-1')
 
         aggregator = Mock()
         aggregator.rx_packets = 0
@@ -104,4 +108,5 @@ class TestSnifferHandleRead(unittest.TestCase):
         while msg:
             sniff.handle_read()
         self.assertEqual(10, self.outfd.write.call_count)
-        self.outfd.write.assert_called_with(self.zep_message)
+        msg = (self.zep_message).decode('latin-1')
+        self.outfd.write.assert_called_with(msg)

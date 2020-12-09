@@ -39,8 +39,8 @@ from iotlabaggregator import LOGGER
 #     python-asyncore-using-100-cpu-after-client-connects
 # Found dispatcher_with_send in the asyncore code
 
-
-class Connection(object, dispatcher_with_send):  # pylint:disable=R0904
+# pylint:disable=bad-option-value,R0904,R0205
+class Connection(dispatcher_with_send, object):
     """
     Handle the connection to one node
     Data is managed with asyncore. So to work asyncore.loop() should be run.
@@ -49,6 +49,7 @@ class Connection(object, dispatcher_with_send):  # pylint:disable=R0904
     """
     port = 20000
 
+    # pylint:disable=bad-option-value,super-on-old-class
     def __init__(self, hostname, aggregator):
         super(Connection, self).__init__()
         dispatcher_with_send.__init__(self)
@@ -77,7 +78,8 @@ class Connection(object, dispatcher_with_send):  # pylint:disable=R0904
 
     def handle_read(self):
         """ Append read bytes to buffer and run data handler. """
-        self.data_buff += self.recv(8192)
+        # Handle Unicode.
+        self.data_buff += self.recv(8192).decode('utf-8', 'replace')
         self.data_buff = self.handle_data(self.data_buff)
 
     def handle_error(self):
@@ -162,7 +164,7 @@ class Aggregator(dict):  # pylint:disable=too-many-public-methods
     def _send(self, hostname, message):
         """ Safe send message to node """
         try:
-            self[hostname].send(message)
+            self[hostname].send(message.encode('utf-8', 'replace'))
         except KeyError:
             LOGGER.warning("Node not managed: %s", hostname)
         except socket.error:

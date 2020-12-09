@@ -38,13 +38,13 @@ class SnifferConnection(connections.Connection):
     port = 30000
     ZEP_HDR_LEN = zeptopcap.ZepPcap.ZEP_HDR_LEN
 
+    # pylint:disable=bad-option-value,super-on-old-class
     def __init__(self, hostname, aggregator, pkt_handler):
         super(SnifferConnection, self).__init__(hostname, aggregator)
         self.pkt_handler = pkt_handler
 
     def handle_data(self, data):
         """ Print the data received line by line """
-
         while True:
             data = self._strip_until_pkt_start(data)
             if not data.startswith('EX\2') or len(data) < self.ZEP_HDR_LEN:
@@ -61,6 +61,12 @@ class SnifferConnection(connections.Connection):
             self.aggregator.rx_packets += 1
 
         return data
+
+    def handle_read(self):
+        """ Append read bytes to buffer and run data handler. """
+        # Sniffer UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff
+        self.data_buff += self.recv(8192).decode('latin-1')
+        self.data_buff = self.handle_data(self.data_buff)
 
     @staticmethod
     def _strip_until_pkt_start(msg):
@@ -102,13 +108,31 @@ class SnifferAggregator(connections.Aggregator):
     """ Aggregator for the Sniffer """
     connection_class = SnifferConnection
 
+    # pylint:disable=bad-option-value,missing-super-argument,no-member
+    class CustomFileType(argparse.FileType):
+        """ Custom FileType class to fix argparse bug with
+        write binary mode ('wb') and stdout ('-')
+        https://bugs.python.org/issue14156
+        """
+        def __call__(self, string):
+            if string == '-' and 'w' in self._mode:
+                return sys.stdout.buffer
+            return super().__call__(string)
+
     parser = argparse.ArgumentParser()
     common.add_nodes_selection_parser(parser)
     _output = parser.add_argument_group("Sniffer output")
-    _output.add_argument(
-        '-o', '--outfile', metavar='PCAP_FILE', dest='outfd',
-        type=argparse.FileType('wb'), required=True,
-        help="Pcap outfile. Use '-' for stdout.")
+    # Python3 fix
+    if sys.version_info[0] > 2:
+        _output.add_argument(
+            '-o', '--outfile', metavar='PCAP_FILE', dest='outfd',
+            type=CustomFileType('wb'), required=True,
+            help="Pcap outfile path. Use '-' for stdout.")
+    else:
+        _output.add_argument(
+            '-o', '--outfile', metavar='PCAP_FILE', dest='outfd',
+            type=argparse.FileType('wb'), required=True,
+            help="Pcap outfile path. Use '-' for stdout.")
     _output.add_argument(
         '-d', '--debug', action='store_true', default=False,
         help="Print debug on received packets")
@@ -146,4 +170,4 @@ def main(args=None):
             LOGGER.info('%u packets captured', aggregator.rx_packets)
     except (ValueError, RuntimeError) as err:
         sys.stderr.write("{}\n".format(err))
-        exit(1)
+        sys.exit(1)
