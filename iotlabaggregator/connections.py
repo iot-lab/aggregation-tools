@@ -49,7 +49,7 @@ class Connection(dispatcher_with_send, object):
     """
     port = 20000
 
-    # pylint:disable=bad-option-value,super-on-old-class
+    # pylint:disable=bad-option-value,super-on-old-class,super-with-arguments
     def __init__(self, hostname, aggregator):
         super(Connection, self).__init__()
         dispatcher_with_send.__init__(self)
@@ -99,6 +99,7 @@ class Aggregator(dict):  # pylint:disable=too-many-public-methods
 
     connection_class = Connection  # overriden in child class
 
+    # pylint: disable=bad-option-value,super-with-arguments
     def __init__(self, nodes_list, *args, **kwargs):
 
         if not nodes_list:

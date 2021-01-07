@@ -38,7 +38,7 @@ class SnifferConnection(connections.Connection):
     port = 30000
     ZEP_HDR_LEN = zeptopcap.ZepPcap.ZEP_HDR_LEN
 
-    # pylint:disable=bad-option-value,super-on-old-class
+    # pylint:disable=bad-option-value,super-on-old-class,super-with-arguments
     def __init__(self, hostname, aggregator, pkt_handler):
         super(SnifferConnection, self).__init__(hostname, aggregator)
         self.pkt_handler = pkt_handler
@@ -140,8 +140,9 @@ class SnifferAggregator(connections.Aggregator):
         '-r', '--raw', '--foren6', action='store_true', default=False,
         help="Extract payload and no encapsulation. For foren6.")
 
+    # pylint: disable=keyword-arg-before-vararg
+    # pylint: disable=bad-option-value,super-with-arguments
     def __init__(self, nodes_list, outfd, raw=False, *args, **kwargs):
-        # pylint: disable=keyword-arg-before-vararg
         zep_pcap = zeptopcap.ZepPcap(outfd, raw)
         super(SnifferAggregator, self).__init__(
             nodes_list, pkt_handler=zep_pcap.write, *args, **kwargs)

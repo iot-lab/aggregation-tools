@@ -122,7 +122,7 @@ class SerialConnection(connections.Connection):  # pylint:disable=R0903,R0904
     logger.setLevel(logging.INFO)
     logger.addHandler(_line_logger)
 
-    # pylint:disable=bad-option-value,too-many-arguments,super-on-old-class
+    # pylint:disable=bad-option-value,too-many-arguments,super-on-old-class,super-with-arguments
     def __init__(self,
                  hostname, aggregator,
                  print_lines=False, line_handler=None, color=False):
