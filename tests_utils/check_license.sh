@@ -14,7 +14,7 @@ files_list=$(echo "${files_list}" | grep -v \
     -e '.md$' \
     -e 'AUTHORS' \
     -e 'COPYING' \
-    -e '.travis.yml' \
+    -e '.github/workflows/continuous-integration.yml' \
     -e 'codecov.yml' \
 )
 
