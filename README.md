@@ -1,7 +1,7 @@
 IoT-Lab Aggregation tools
 =========================
 
-[![Build Status](https://travis-ci.org/iot-lab/aggregation-tools.svg?branch=master)](https://travis-ci.org/iot-lab/aggregation-tools)
+[![CI](https://github.com/iot-lab/aggregation-tools/workflows/CI/badge.svg)](https://github.com/iot-lab/aggregation-tools/actions?query=workflow%3ACI+branch%3Amaster)
 [![codecov](https://codecov.io/gh/iot-lab/aggregation-tools/branch/master/graph/badge.svg)](https://codecov.io/gh/iot-lab/aggregation-tools)
 
 Tools that allow aggregating data results from many nodes at a time.
