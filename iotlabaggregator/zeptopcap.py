@@ -125,7 +125,7 @@ class ZepPcap():
         t_s = ntp_t[0] - self.NTP_JAN_1970
         t_us = (1000000 * ntp_t[1]) / self.NTP_SECONDS_FRAC
 
-        return t_s, t_us
+        return t_s, round(t_us)
 
     def _udp_header(self, pkt_len):
         """ Get UDP Header
@@ -189,7 +189,7 @@ class ZepPcap():
         4B - Actual lengt of packet: pkt_len
         """
 
-        hdr_struct = struct.Struct('=LfLL')
+        hdr_struct = struct.Struct('=LLLL')
         pcap_len = pkt_len
         pcap_hdr = hdr_struct.pack(t_s, t_us, pcap_len, pcap_len)
         return pcap_hdr
