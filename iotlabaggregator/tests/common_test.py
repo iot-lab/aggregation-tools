@@ -36,12 +36,10 @@ from iotlabaggregator import common
 
 class TestCommonFunctions(unittest.TestCase):
 
+    @patch('iotlabcli.get_current_experiment')
     @patch('iotlabaggregator.common.experiment.get_experiment')
-    def test_get_experiment_nodes(self, get_exp):
+    def test_query_nodes(self, get_exp, get_cur_exp):
         api = None
-        # Already terminated experiment
-        self.assertEqual([], common.get_experiment_nodes(api, exp_id=None))
-
         resources = {"items": [
             {'network_address': 'm3-1.grenoble.iot-lab.info',
              'site': 'grenoble'},
@@ -54,47 +52,28 @@ class TestCommonFunctions(unittest.TestCase):
             {'network_address': 'a8-1.grenoble.iot-lab.info',
              'site': 'grenoble'},
         ]}
+        get_exp.return_value = resources
+        get_cur_exp.return_value = 123
 
-        # Already terminated experiment
-        get_exp.side_effect = (
-            lambda a, e, req: {'': {'state': 'Running'},
-                               'nodes': resources}[req])
-        self.assertEqual(['m3-1', 'wsn430-4', 'a8-1'],
-                         common.get_experiment_nodes(api, 123, 'grenoble'))
-        get_exp.side_effect = None
+        # without exp_id
+        ret = common.query_nodes(api, hostname='strasbourg')
+        self.assertEqual(['a8-1'], ret)
 
-        # Already terminated experiment
-        get_exp.return_value = {'state': 'Terminated'}
-        self.assertRaises(RuntimeError, common.get_experiment_nodes, api, 123)
+        # with exp_id
+        ret = common.query_nodes(api, exp_id=123, hostname='grenoble')
+        self.assertEqual(['a8-1', 'm3-1', 'wsn430-4'], ret)
 
-    @patch('iotlabcli.get_current_experiment')
-    @patch('iotlabaggregator.common.get_experiment_nodes')
-    def test_query_nodes(self, get_exp_nodes, get_cur_exp):
-        api = None
-        get_exp_nodes.side_effect = (
-            lambda a, exp, h: {
-                123: ['m3-3'], 234: ['a8-1', 'm3-2'], None: []}[exp])
-        get_cur_exp.return_value = 234
-
-        # no parameters, use dynamic exp_id
-        ret = common.query_nodes(api)
-        self.assertEqual(['a8-1', 'm3-2'], ret)
-
-        # exp_id
-        ret = common.query_nodes(api, exp_id=123)
-        self.assertEqual(['m3-3'], ret)
-
-        # nodes_list_list
-        ret = common.query_nodes(api, nodes_list_list=[
+        # with nodes_list
+        ret = common.query_nodes(api, nodes_list=[
             ['m3-1.grenoble.iot-lab.info'],
-            ['a8-10.grenoble.iot-lab.info']], hostname='grenoble')
-        self.assertEqual(['a8-10', 'm3-1'], ret)
+            ['a8-1.grenoble.iot-lab.info']], hostname='grenoble')
+        self.assertEqual(['a8-1', 'm3-1'], ret)
 
-        # exp_id and nodes_list_list
-        ret = common.query_nodes(api, exp_id=123, nodes_list_list=[
-            ['m3-1.grenoble.iot-lab.info'],
-            ['a8-10.grenoble.iot-lab.info']], hostname='grenoble')
-        self.assertEqual(['a8-10', 'm3-1', 'm3-3'], ret)
+        # exp_id and nodes_list
+        ret = common.query_nodes(api, exp_id=123, nodes_list=[
+            ['m3-1.lille.iot-lab.info'],
+            ['wsn430-1.iot-lab.info']], hostname='lille')
+        self.assertEqual(['wsn430-1'], ret)
 
     @patch('iotlabcli.get_user_credentials')
     @patch('iotlabcli.Api')
