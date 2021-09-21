@@ -24,8 +24,8 @@
 
 import os
 import sys
-import asyncore
-from asyncore import dispatcher_with_send
+import asyncore  # pylint:disable=deprecated-module
+from asyncore import dispatcher_with_send  # pylint:disable=deprecated-module
 import threading
 import socket
 import signal
