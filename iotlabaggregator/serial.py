@@ -136,8 +136,7 @@ class SerialConnection(connections.Connection):  # pylint:disable=R0903,R0904
 
         self.fmt = '%s;%s'
         if color:
-            self.fmt = '%s%s%s' % (color_str(self.hostname),
-                                   self.fmt, COLOR_RESET)
+            self.fmt = f'{color_str(self.hostname)}{self.fmt}{COLOR_RESET}'
 
     def handle_data(self, data):
         """ Print the data received line by line """
@@ -286,5 +285,5 @@ def main(args=None):
                               color=opts.color) as aggregator:
             aggregator.run()
     except (ValueError, RuntimeError) as err:
-        sys.stderr.write("%s\n" % err)
+        sys.stderr.write(f"{err}\n")
         sys.exit(1)

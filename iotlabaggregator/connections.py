@@ -103,8 +103,9 @@ class Aggregator(dict):  # pylint:disable=too-many-public-methods
     def __init__(self, nodes_list, *args, **kwargs):
 
         if not nodes_list:
-            raise ValueError("%s: Empty nodes list %r" %
-                             (self.__class__.__name__, nodes_list))
+            raise ValueError(
+                f"{self.__class__.__name__}: Empty nodes list {nodes_list!r}"
+            )
         super(Aggregator, self).__init__()
         self._running = False
 

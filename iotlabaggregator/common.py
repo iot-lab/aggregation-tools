@@ -74,7 +74,7 @@ class Event(list):  # pylint:disable=too-few-public-methods
             func(*args, **kwargs)
 
     def __repr__(self):
-        return "Event(%r)" % list.__repr__(self)
+        return f"Event({list.__repr__(self)!r})"
 
 
 def extract_nodes(resources, hostname=None):
@@ -114,8 +114,7 @@ def get_experiment_nodes(api, exp_id=None, hostname=None):
     # Check that the experiment is running
     state = experiment.get_experiment(api, exp_id, '')["state"]
     if state != 'Running':
-        raise RuntimeError("Experiment {} not running '{}'"
-                           .format(exp_id, state))
+        raise RuntimeError(f"Experiment {exp_id} not running '{state}'")
 
     # Get experiment nodes
     nodes = experiment.get_experiment(api, exp_id, 'nodes')
