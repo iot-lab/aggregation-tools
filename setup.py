@@ -61,7 +61,6 @@ setup(
     packages=find_packages(),
     scripts=SCRIPTS,
     classifiers=['Programming Language :: Python',
-                 'Programming Language :: Python :: 2',
                  'Programming Language :: Python :: 3',
                  'License :: OSI Approved',
                  'Intended Audience :: End Users/Desktop',

@@ -22,7 +22,6 @@
 
 # pylint:disable=missing-docstring
 
-from __future__ import print_function
 import unittest
 import binascii
 from mock import patch, Mock
