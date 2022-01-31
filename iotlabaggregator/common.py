@@ -98,48 +98,23 @@ def extract_nodes(resources, hostname=None):
     return nodes
 
 
-def get_experiment_nodes(api, exp_id=None, hostname=None):
-    """ Add the nodes from given experiment
-    Return the experiment nodes list. Returns an empty list if exp_id is None
-    Restrict to the nodes from current site
-
-    :raise ValueError: If the experiment is not running,
-    """
+def query_nodes(api, exp_id=None, nodes_list=None, hostname=None):
+    """Get nodes list from nodes_list or current running experiment."""
     hostname = hostname or HOSTNAME
-    # add nodes from experiment
-
+    nodes_list = nodes_list or []
+    # -l grenoble,m3,1 -l grenoble,m3,5
+    # [['m3-1.grenoble.iot-lab.info'], ['m3-5.grenoble.iot-lab.info']]
+    nodes_list = frozenset(itertools.chain.from_iterable(nodes_list))
+    nodes_list = [n.split('.')[0] for n in nodes_list if hostname in n]
+    # try to get currently running experiment
     if exp_id is None:
-        return []
-
-    # Check that the experiment is running
-    state = experiment.get_experiment(api, exp_id, '')["state"]
-    if state != 'Running':
-        raise RuntimeError(f"Experiment {exp_id} not running '{state}'")
-
-    # Get experiment nodes
-    nodes = experiment.get_experiment(api, exp_id, 'nodes')
-    return extract_nodes(nodes, hostname)
-
-
-def query_nodes(api, exp_id=None, nodes_list_list=None, hostname=None):
-    """ Get nodes list from experiment and/or nodes_list_list.
-    Or currently running experiment if none provided """
-    hostname = hostname or HOSTNAME
-    nodes_list_list = nodes_list_list or ()
-    nodes_list = frozenset(itertools.chain.from_iterable(nodes_list_list))
-
-    nodes = set()
-    # no nodes supplied, try to get currently running experiment
-    if exp_id is None and not nodes_list:
         exp_id = iotlabcli.get_current_experiment(api)
-
-    # add nodes from experiment, empty if exp_id is None
-    nodes.update(get_experiment_nodes(api, exp_id, hostname))
-    # add nodes from nodes_list, may be empty
-    nodes.update([n.split('.')[0] for n in nodes_list if hostname in n])
-
-    # sorted output for tests
-    return sorted(list(nodes))
+    exp_nodes = experiment.get_experiment(api, exp_id, 'nodes')
+    exp_nodes_list = extract_nodes(exp_nodes, hostname)
+    nodes = set(exp_nodes_list).intersection(nodes_list)
+    if nodes:
+        return sorted(list(nodes))
+    return sorted(exp_nodes_list)
 
 
 def add_nodes_selection_parser(parser):
