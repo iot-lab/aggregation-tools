@@ -25,7 +25,7 @@
 import sys
 import logging
 
-__version__ = '2.1.0'
+__version__ = '2.1.1'
 
 
 # Use loggers for all outputs to have the same config
