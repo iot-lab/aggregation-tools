@@ -33,6 +33,9 @@ import logging
 from iotlabaggregator import connections, common, zeptopcap, LOGGER
 
 
+SNIFFER_NODES_COMPAT = ['a8', 'frdm-kw41z', 'm3', 'nrf52840dk', 'samr21']
+
+
 class SnifferConnection(connections.Connection):
     """ Connection to sniffer and data handling """
     port = 30000
@@ -152,7 +155,7 @@ class SnifferAggregator(connections.Aggregator):
     def select_nodes(opts):
         """ Select all gateways that support sniffer """
         nodes = common.get_nodes_selection(**vars(opts))
-        nodes_list = [n for n in nodes if n.startswith(('m3', 'a8'))]
+        nodes_list = [n for n in nodes if n.startswith(SNIFFER_NODES_COMPAT)]
         return nodes_list
 
 
