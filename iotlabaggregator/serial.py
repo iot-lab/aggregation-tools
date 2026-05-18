@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# -*- coding:utf-8 -*-
 
 # This file is a part of IoT-LAB aggregation-tools
 # Copyright (C) 2015 INRIA (Contact: admin@iot-lab.info)
@@ -56,37 +55,36 @@ To give a 'correct' looking output, only lines are printed.
 The script will get the serial links current site nodes.
 For multi-sites experiments, you should run the script on each site server.
 """
-# pylint versions have different outputs...
-# pylint:disable=too-few-public-methods
-# pylint:disable=too-many-public-methods
 
-# use readline for 'raw_input'
-from builtins import input
-import readline  # noqa  # pylint:disable=unused-import
-
-import logging
-import sys
 import argparse
-
+import logging
+import readline  # noqa: F401
+import sys
 
 from iotlabcli.parser import common as common_parser
 
-from iotlabaggregator import connections, common, LOG_FMT
+from iotlabaggregator import LOG_FMT, common, connections
 
 try:
-    import colorama  # pylint:disable=import-error
+    import colorama
+
     HAS_COLOR = True
 except ImportError:
     HAS_COLOR = False
 
 
-# Declare color specific functions
 if HAS_COLOR:
     colorama.init()
-    _COLOR = [colorama.Fore.BLACK, colorama.Fore.RED,
-              colorama.Fore.GREEN, colorama.Fore.YELLOW,
-              colorama.Fore.BLUE, colorama.Fore.MAGENTA,
-              colorama.Fore.CYAN, colorama.Fore.WHITE]
+    _COLOR = [
+        colorama.Fore.BLACK,
+        colorama.Fore.RED,
+        colorama.Fore.GREEN,
+        colorama.Fore.YELLOW,
+        colorama.Fore.BLUE,
+        colorama.Fore.MAGENTA,
+        colorama.Fore.CYAN,
+        colorama.Fore.WHITE,
+    ]
     COLOR_RESET = str(colorama.Fore.RESET)
 
     def _color_hash(string):
@@ -97,36 +95,42 @@ if HAS_COLOR:
         """Return color string character for identifier."""
         color_idx = _color_hash(string) % len(_COLOR)
         return str(_COLOR[color_idx])
+
 else:
-    COLOR_RESET = ''
+    COLOR_RESET = ""
 
     def color_str(_):
         """No color."""
-        return ''
+        return ""
 
 
-class SerialConnection(connections.Connection):  # pylint:disable=R0903,R0904
-    """
-    Handle the connection to one node serial link.
-    Data is managed with asyncore. So to work asyncore.loop() should be run.
+class SerialConnection(connections.Connection):
+    """Handle the connection to one node serial link.
+
+    Data is managed with a selector loop.
 
     :param print_lines: should lines be printed to stdout
     :param line_handler: additional function to call on received lines.
-        `line_handler(identifier, line)`
+        ``line_handler(identifier, line)``
     """
+
     port = 20000
 
     _line_logger = logging.StreamHandler(sys.stdout)
     _line_logger.setFormatter(LOG_FMT)
-    logger = logging.getLogger('SerialConnection')
+    logger = logging.getLogger("SerialConnection")
     logger.setLevel(logging.INFO)
     logger.addHandler(_line_logger)
 
-    # pylint:disable=bad-option-value,too-many-arguments,super-on-old-class,super-with-arguments
-    def __init__(self,
-                 hostname, aggregator,
-                 print_lines=False, line_handler=None, color=False):
-        super(SerialConnection, self).__init__(hostname, aggregator)
+    def __init__(
+        self,
+        hostname,
+        aggregator,
+        print_lines=False,
+        line_handler=None,
+        color=False,
+    ):
+        super().__init__(hostname, aggregator)
 
         self.line_handler = common.Event()
         if print_lines:
@@ -134,17 +138,16 @@ class SerialConnection(connections.Connection):  # pylint:disable=R0903,R0904
         if line_handler:
             self.line_handler.append(line_handler)
 
-        self.fmt = '%s;%s'
+        self.fmt = "%s;%s"
         if color:
-            self.fmt = f'{color_str(self.hostname)}{self.fmt}{COLOR_RESET}'
+            self.fmt = f"{color_str(self.hostname)}{self.fmt}{COLOR_RESET}"
 
     def handle_data(self, data):
-        """ Print the data received line by line """
-
+        """Print the data received line by line."""
         lines = data.splitlines(True)
-        data = ''
+        data = ""
         for line in lines:
-            if line[-1] == '\n':
+            if line[-1] == "\n":
                 line = line[:-1]
                 self.line_handler(self.hostname, line)
             else:
@@ -152,57 +155,63 @@ class SerialConnection(connections.Connection):  # pylint:disable=R0903,R0904
         return data
 
     def print_line(self, identifier, line):
-        """ Print one line prefixed by id in format: """
+        """Print one line prefixed by id."""
         self.logger.info(self.fmt, identifier, line)
 
 
 class SerialAggregator(connections.Aggregator):
-    """ Aggregator for the Serial """
+    """Aggregator for the Serial."""
+
     connection_class = SerialConnection
 
     parser = argparse.ArgumentParser()
     common.add_nodes_selection_parser(parser)
     parser.add_argument(
-        '--with-a8', action='store_true',
-        help=('redirect open-a8 serial port. ' +
-              '`/etc/init.d/serial_redirection` must be running on the nodes'))
+        "--with-a8",
+        action="store_true",
+        help=(
+            "redirect open-a8 serial port. "
+            "`/etc/init.d/serial_redirection` must be running on the nodes"
+        ),
+    )
 
-    # Add 'opts.color' no error if no available
     parser.set_defaults(color=False)
     if HAS_COLOR:
         parser.add_argument(
-            '--color', action='store_true', default=False,
-            help='Add color to node lines.',
+            "--color",
+            action="store_true",
+            default=False,
+            help="Add color to node lines.",
         )
 
     @staticmethod
     def select_nodes(opts):
-        """ Select all gateways and open-a8 if `with_a8` """
+        """Select all gateways and open-a8 if ``with_a8``."""
         nodes = common.get_nodes_selection(**vars(opts))
 
         # all gateways urls except A8
-        nodes_list = [n for n in nodes if not n.startswith('a8')]
+        nodes_list = [n for n in nodes if not n.startswith("a8")]
 
         # add open-a8 urls with 'node-' in front all urls
         if opts.with_a8:
-            nodes_list += ['node-' + n for n in nodes if n.startswith('a8')]
+            nodes_list += ["node-" + n for n in nodes if n.startswith("a8")]
         return nodes_list
 
-    def run(self):  # overwrite original function
-        """ Read standard input while aggregator is running """
+    def run(self):
+        """Read standard input while aggregator is running."""
         try:
             self.read_input()
         except (KeyboardInterrupt, EOFError):
             pass
 
     def read_input(self):
-        """ Read input and sends the messages to the given nodes """
+        """Read input and sends the messages to the given nodes."""
         while True:
             line = input()
             nodes, message = self.extract_nodes_and_message(line)
 
-            if (None, '') != (nodes, message):
-                self.send_nodes(nodes, message + '\n')
+            if (None, "") != (nodes, message):
+                self.send_nodes(nodes, message + "\n")
             # else: Only hitting 'enter' to get spacing
 
     @staticmethod
@@ -247,23 +256,22 @@ class SerialAggregator(connections.Aggregator):
 
         """
         try:
-            nodes_str, message = line.split(';')
-            if nodes_str == '-':
-                # -
+            nodes_str, message = line.split(";")
+            if nodes_str == "-":
                 return None, message
 
-            if ',' in nodes_str:
+            if "," in nodes_str:
                 # m3,1-5+4
-                archi, list_str = nodes_str.split(',')
+                archi, list_str = nodes_str.split(",")
             else:
                 # m3-1 , a8-2, node-a8-3, wsn430-4
                 # convert it as if it was with a comma
-                archi, list_str = nodes_str.rsplit('-', 1)
+                archi, list_str = nodes_str.rsplit("-", 1)
                 int(list_str)  # ValueError if not int
 
             # normalize archi
             archi = archi.lower()
-            archi = 'node-a8' if archi == 'a8' else archi
+            archi = "node-a8" if archi == "a8" else archi
 
             # get nodes list
             nodes = common_parser.nodes_id_list(archi, list_str)
@@ -274,15 +282,14 @@ class SerialAggregator(connections.Aggregator):
 
 
 def main(args=None):
-    """ Aggregate all nodes sniffer """
+    """Aggregate all nodes serial links."""
     args = args or sys.argv[1:]
     opts = SerialAggregator.parser.parse_args(args)
     try:
-        # Parse arguments
         nodes_list = SerialAggregator.select_nodes(opts)
-        # Run the aggregator
-        with SerialAggregator(nodes_list, print_lines=True,
-                              color=opts.color) as aggregator:
+        with SerialAggregator(
+            nodes_list, print_lines=True, color=opts.color
+        ) as aggregator:
             aggregator.run()
     except (ValueError, RuntimeError) as err:
         sys.stderr.write(f"{err}\n")

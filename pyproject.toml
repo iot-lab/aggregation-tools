@@ -1,0 +1,65 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "iotlabaggregator"
+dynamic = ["version"]
+description = "IoT-LAB testbed node connection command-line tools"
+readme = "README.md"
+license = { text = "CeCILL v2.1" }
+authors = [{ name = "IoT-LAB Team", email = "admin@iot-lab.info" }]
+urls = { Homepage = "http://www.iot-lab.info", Download = "https://github.com/iot-lab/aggregation-tools" }
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved",
+    "Intended Audience :: End Users/Desktop",
+    "Environment :: Console",
+    "Topic :: Utilities",
+]
+requires-python = ">=3.10"
+dependencies = ["iotlabcli>=2.2.1", "chardet"]
+
+[project.optional-dependencies]
+color_serial = ["colorama>=0.3.7"]
+
+[project.scripts]
+serial_aggregator = "iotlabaggregator.serial:main"
+sniffer_aggregator = "iotlabaggregator.sniffer:main"
+
+[tool.hatch.version]
+path = "iotlabaggregator/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["iotlabaggregator"]
+
+[tool.pytest.ini_options]
+addopts = [
+    "-v",
+    "--doctest-modules",
+    "--cov=iotlabaggregator",
+    "--cov-report=term-missing",
+    "--cov-report=term",
+    "--cov-report=xml",
+]
+testpaths = ["iotlabaggregator"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "UP", "C90"]
+ignore = ["E501"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.isort]
+profile = "black"
+src_paths = ["iotlabaggregator"]
+
+[tool.coverage.run]
+source = ["iotlabaggregator"]
+omit = ["iotlabaggregator/tests/*"]
