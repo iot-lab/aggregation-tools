@@ -9,7 +9,7 @@ files_list=$(git ls-tree -r HEAD --full-tree --name-only)
 files_list=$(echo "${files_list}" | grep -v \
     -e 'tests_utils/' \
     -e '.gitignore' \
-    -e 'setup.cfg' \
+    -e 'pyproject.toml' \
     -e 'tox.ini' \
     -e '.md$' \
     -e '.rst$' \

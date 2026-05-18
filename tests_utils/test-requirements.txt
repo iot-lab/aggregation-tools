@@ -1,8 +1,4 @@
-future
 pytest
 pytest-cov
-pytest-pep8
-mock
-pylint
-flake8
-codecov>=1.4.0
+ruff
+isort

@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# -*- coding:utf-8 -*-
 
 # This file is a part of IoT-LAB aggregation-tools
 # Copyright (C) 2015 INRIA (Contact: admin@iot-lab.info)
@@ -21,13 +20,15 @@
 # knowledge of the CeCILL license and that you accept its terms.
 
 
-""" Common functions that may be required """
-import os
+"""Common functions that may be required"""
+
 import itertools
+import os
+
 import iotlabcli
-from iotlabcli import experiment
 import iotlabcli.parser.common
 import iotlabcli.parser.node
+from iotlabcli import experiment
 
 import iotlabaggregator
 
@@ -93,8 +94,8 @@ def extract_nodes(resources, hostname=None):
     ['m3-1', 'wsn430-4', 'a8-1']
     """
     hostname = hostname or HOSTNAME
-    sites_nodes = [n for n in resources['items'] if n['site'] == hostname]
-    nodes = [n['network_address'].split('.')[0] for n in sites_nodes]
+    sites_nodes = [n for n in resources["items"] if n["site"] == hostname]
+    nodes = [n["network_address"].split(".")[0] for n in sites_nodes]
     return nodes
 
 
@@ -105,11 +106,11 @@ def query_nodes(api, exp_id=None, nodes_list=None, hostname=None):
     # -l grenoble,m3,1 -l grenoble,m3,5
     # [['m3-1.grenoble.iot-lab.info'], ['m3-5.grenoble.iot-lab.info']]
     nodes_list = frozenset(itertools.chain.from_iterable(nodes_list))
-    nodes_list = [n.split('.')[0] for n in nodes_list if hostname in n]
+    nodes_list = [n.split(".")[0] for n in nodes_list if hostname in n]
     # try to get currently running experiment
     if exp_id is None:
         exp_id = iotlabcli.get_current_experiment(api)
-    exp_nodes = experiment.get_experiment(api, exp_id, 'nodes')
+    exp_nodes = experiment.get_experiment(api, exp_id, "nodes")
     exp_nodes_list = extract_nodes(exp_nodes, hostname)
     nodes = set(exp_nodes_list).intersection(nodes_list)
     if nodes:
@@ -118,25 +119,34 @@ def query_nodes(api, exp_id=None, nodes_list=None, hostname=None):
 
 
 def add_nodes_selection_parser(parser):
-    """ Add parser arguments for selecting nodes """
+    """Add parser arguments for selecting nodes"""
 
     iotlabcli.parser.common.add_auth_arguments(parser)
-    parser.add_argument('-v', '--version', action='version',
-                        version=iotlabaggregator.__version__)
+    parser.add_argument(
+        "-v", "--version", action="version", version=iotlabaggregator.__version__
+    )
     nodes_group = parser.add_argument_group(
         description="By default, select currently running experiment nodes",
-        title="Nodes selection")
+        title="Nodes selection",
+    )
 
-    nodes_group.add_argument('-i', '--id', dest='experiment_id', type=int,
-                             help='experiment id submission')
-    nodes_group.add_argument('-l', '--list', action='append',
-                             type=iotlabcli.parser.common.nodes_list_from_str,
-                             dest='nodes_list', help='nodes list')
+    nodes_group.add_argument(
+        "-i", "--id", dest="experiment_id", type=int, help="experiment id submission"
+    )
+    nodes_group.add_argument(
+        "-l",
+        "--list",
+        action="append",
+        type=iotlabcli.parser.common.nodes_list_from_str,
+        dest="nodes_list",
+        help="nodes list",
+    )
 
 
-def get_nodes_selection(username, password, experiment_id, nodes_list,
-                        *_args, **_kwargs):  # pylint:disable=unused-argument
-    """ Return the requested nodes from 'experiment_id', and 'nodes_list """
+def get_nodes_selection(
+    username, password, experiment_id, nodes_list, *_args, **_kwargs
+):  # pylint:disable=unused-argument
+    """Return the requested nodes from 'experiment_id', and 'nodes_list"""
     username, password = iotlabcli.get_user_credentials(username, password)
     api = iotlabcli.Api(username, password)
     with iotlabcli.parser.common.catch_missing_auth_cli():
