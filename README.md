@@ -31,9 +31,6 @@ Aggregate all the serial links of an experiment and print it to stdout.
     1395240359.293760;m3-9;    s:  send a radio packet
     1395240359.294044;m3-9;
     1395240359.294212;m3-9; Type Enter to stop printing this help
-    1395240359.294781;wsn430-37;
-    1395240359.294949;wsn430-37;Senslab Simple Demo program
-    1395240359.295098;wsn430-37;Type command
     ...
 
 

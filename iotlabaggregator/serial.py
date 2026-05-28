@@ -238,9 +238,6 @@ class SerialAggregator(connections.Aggregator):
         >>> SerialAggregator.extract_nodes_and_message('m3,1-3+5;message')
         (['m3-1', 'm3-2', 'm3-3', 'm3-5'], 'message')
 
-        >>> SerialAggregator.extract_nodes_and_message('wsn430,3+5;message')
-        (['wsn430-3', 'wsn430-5'], 'message')
-
         >>> SerialAggregator.extract_nodes_and_message('a8,1+2;message')
         (['node-a8-1', 'node-a8-2'], 'message')
 
@@ -264,7 +261,7 @@ class SerialAggregator(connections.Aggregator):
                 # m3,1-5+4
                 archi, list_str = nodes_str.split(",")
             else:
-                # m3-1 , a8-2, node-a8-3, wsn430-4
+                # m3-1 , a8-2, node-a8-3
                 # convert it as if it was with a comma
                 archi, list_str = nodes_str.rsplit("-", 1)
                 int(list_str)  # ValueError if not int

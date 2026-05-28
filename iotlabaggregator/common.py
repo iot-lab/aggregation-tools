@@ -82,16 +82,13 @@ def extract_nodes(resources, hostname=None):
     """ Extract the nodes for this server
     >>> resources = {"items": [ \
         {'network_address': 'm3-1.grenoble.iot-lab.info', 'site': 'grenoble'},\
-        {'network_address': 'wsn430-1.lille.iot-lab.info', 'site': 'lille'},\
         {'network_address': 'a8-1.strasbourg.iot-lab.info',\
          'site': 'strasbourg'},\
-        {'network_address': 'wsn430-4.grenoble.iot-lab.info', 'site':\
-         'grenoble'},\
         {'network_address': 'a8-1.grenoble.iot-lab.info', 'site': 'grenoble'},\
         ]}
 
     >>> extract_nodes(resources, hostname='grenoble')
-    ['m3-1', 'wsn430-4', 'a8-1']
+    ['m3-1', 'a8-1']
     """
     hostname = hostname or HOSTNAME
     sites_nodes = [n for n in resources["items"] if n["site"] == hostname]

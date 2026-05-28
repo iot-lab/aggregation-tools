@@ -35,14 +35,9 @@ class TestCommonFunctions(unittest.TestCase):
         resources = {
             "items": [
                 {"network_address": "m3-1.grenoble.iot-lab.info", "site": "grenoble"},
-                {"network_address": "wsn430-1.lille.iot-lab.info", "site": "lille"},
                 {
                     "network_address": "a8-1.strasbourg.iot-lab.info",
                     "site": "strasbourg",
-                },
-                {
-                    "network_address": "wsn430-4.grenoble.iot-lab.info",
-                    "site": "grenoble",
                 },
                 {
                     "network_address": "a8-1.grenoble.iot-lab.info",
@@ -59,7 +54,7 @@ class TestCommonFunctions(unittest.TestCase):
 
         # with exp_id
         ret = common.query_nodes(api, exp_id=123, hostname="grenoble")
-        self.assertEqual(["a8-1", "m3-1", "wsn430-4"], ret)
+        self.assertEqual(["a8-1", "m3-1"], ret)
 
         # with nodes_list
         ret = common.query_nodes(
@@ -77,12 +72,12 @@ class TestCommonFunctions(unittest.TestCase):
             api,
             exp_id=123,
             nodes_list=[
-                ["m3-1.lille.iot-lab.info"],
-                ["wsn430-1.iot-lab.info"],
+                ["m3-1.grenoble.iot-lab.info"],
+                ["a8-1.strasbourg.iot-lab.info"],
             ],
-            hostname="lille",
+            hostname="grenoble",
         )
-        self.assertEqual(["wsn430-1"], ret)
+        self.assertEqual(["m3-1"], ret)
 
     @patch("iotlabcli.get_user_credentials")
     @patch("iotlabcli.Api")
