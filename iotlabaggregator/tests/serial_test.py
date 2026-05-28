@@ -54,16 +54,8 @@ class TestSelectNodes(unittest.TestCase):
                         "site": "grenoble",
                     },
                     {
-                        "network_address": "wsn430-1.lille.iot-lab.info",
-                        "site": "lille",
-                    },
-                    {
                         "network_address": "a8-1.strasbourg.iot-lab.info",
                         "site": "strasbourg",
-                    },
-                    {
-                        "network_address": "wsn430-4.grenoble.iot-lab.info",
-                        "site": "grenoble",
                     },
                     {
                         "network_address": "a8-1.grenoble.iot-lab.info",
@@ -78,13 +70,13 @@ class TestSelectNodes(unittest.TestCase):
     def test_no_args(self):
         opts = serial.SerialAggregator.parser.parse_args([])
         nodes_list = serial.SerialAggregator.select_nodes(opts)
-        # Only grenoble nodes, m3 and wsn430
-        self.assertEqual(["m3-1", "wsn430-4"], nodes_list)
+        # Only grenoble nodes, m3
+        self.assertEqual(["m3-1"], nodes_list)
 
         opts = serial.SerialAggregator.parser.parse_args(["--with-a8"])
         nodes_list = serial.SerialAggregator.select_nodes(opts)
         # Also a8 nodes
-        self.assertEqual(["m3-1", "wsn430-4", "node-a8-1"], nodes_list)
+        self.assertEqual(["m3-1", "node-a8-1"], nodes_list)
 
     @mock.patch("iotlabaggregator.common.HOSTNAME", "grenoble")
     def test_node_selection(self):
@@ -94,7 +86,7 @@ class TestSelectNodes(unittest.TestCase):
 
         # nodes from another site
         opts = serial.SerialAggregator.parser.parse_args(
-            ["-l", "grenoble,m3,1", "-l", "lille,wsn430,1"]
+            ["-l", "grenoble,m3,1", "-l", "strasbourg,a8,1"]
         )
         nodes_list = serial.SerialAggregator.select_nodes(opts)
         self.assertEqual(["m3-1"], nodes_list)
