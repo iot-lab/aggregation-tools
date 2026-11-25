@@ -52,8 +52,10 @@ To give a 'correct' looking output, only lines are printed.
 
 ### Multi sites experiments ###
 
-The script will get the serial links current site nodes.
-For multi-sites experiments, you should run the script on each site server.
+On a frontend, the script gets the serial links of the nodes of its site.
+Elsewhere (your computer), it gets the nodes of every site of the
+experiment through an 'ssh -D' SOCKS proxy to each frontend, and names them
+<node>.<site>; send to one with '<node>.<site>;<text>'.
 """
 
 import argparse
@@ -251,11 +253,21 @@ class SerialAggregator(connections.Aggregator):
         >>> SerialAggregator.extract_nodes_and_message('node-a8-1;message')
         (['node-a8-1'], 'message')
 
+        # outside a frontend, nodes of a given site
+        >>> SerialAggregator.extract_nodes_and_message('m3-1.grenoble;message')
+        (['m3-1.grenoble'], 'message')
+
+        >>> SerialAggregator.extract_nodes_and_message('m3,1-2.saclay;message')
+        (['m3-1.saclay', 'm3-2.saclay'], 'message')
+
         """
         try:
             nodes_str, message = line.split(";")
             if nodes_str == "-":
                 return None, message
+
+            nodes_str, _, site = nodes_str.partition(".")
+            suffix = f".{site}" if site else ""
 
             if "," in nodes_str:
                 # m3,1-5+4
@@ -273,7 +285,7 @@ class SerialAggregator(connections.Aggregator):
             # get nodes list
             nodes = common_parser.nodes_id_list(archi, list_str)
 
-            return nodes, message
+            return [node + suffix for node in nodes], message
         except (IndexError, ValueError):
             return None, line
 
@@ -284,10 +296,13 @@ def main(args=None):
     opts = SerialAggregator.parser.parse_args(args)
     try:
         nodes_list = SerialAggregator.select_nodes(opts)
-        with SerialAggregator(
-            nodes_list, print_lines=True, color=opts.color
-        ) as aggregator:
-            aggregator.run()
+        with common.nodes_proxies(nodes_list, opts.username, opts.socks) as proxies:
+            aggregator = SerialAggregator(
+                nodes_list, print_lines=True, color=opts.color
+            )
+            aggregator.proxies = proxies
+            with aggregator:
+                aggregator.run()
     except (ValueError, RuntimeError) as err:
         sys.stderr.write(f"{err}\n")
         sys.exit(1)

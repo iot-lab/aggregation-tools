@@ -1,6 +1,18 @@
 Changelog
 =========
 
+Unreleased
+----------
+
+Features
+~~~~~~~~
+
+- serial_aggregator and sniffer_aggregator run on your computer: outside
+  the SSH frontends, the nodes of every site are reached through an
+  'ssh -D' SOCKS proxy to each frontend and named <node>.<site>;
+  --socks <site>=<host>:<port> reuses an existing proxy
+- serial input accepts '<node>.<site>;message'
+
 2.1.1
 -----
 

@@ -34,6 +34,28 @@ Aggregate all the serial links of an experiment and print it to stdout.
     ...
 
 
+### From your computer ###
+
+Outside the SSH frontends, `serial_aggregator` reaches the nodes of every
+site of the experiment through the frontends: it starts one
+`ssh -N -D` SOCKS proxy per site (your IoT-LAB login, from `iotlab-auth`,
+and the SSH key of your IoT-LAB profile, which must work without a
+prompt), connects to the nodes through them, and stops them at the end.
+The nodes are then named `<node>.<site>`:
+
+    you@yourpc $ serial_aggregator -i <exp_id>
+    1795632001.112233;SOCKS proxy to grenoble on port 45227
+    1795632001.554433;SOCKS proxy to saclay on port 53819
+    1795632001.554500;Aggregator started
+    1795632003.120000;m3-6.grenoble;> version
+    1795632003.120100;m3-6.grenoble;2026.10
+    1795632005.330000;m3-5.saclay;> version
+
+`--socks <site>=<host>:<port>` uses a SOCKS5 proxy you already have for that
+site (for example `ssh -f -N -D 1080 <login>@grenoble.iot-lab.info`) instead
+of starting one. On a frontend of the experiment, nothing changes: the
+nodes of that site, named without their site.
+
 ### Sending messages ###
 
 Standard input is parsed to allow sending messages to the nodes.
@@ -51,6 +73,11 @@ docstring for all allowed values.
 
     'm3,1-3+5;message'  -> sends 'message\n' to nodes 'm3-[1, 2, 3, 5]'
     'm3-1;message'      -> sends 'message\n' to nodes 'm3-1'
+
+    # from your computer, nodes named <node>.<site>
+    'm3-1.grenoble;message' -> sends 'message\n' to 'm3-1.grenoble'
+    'm3,1-2.saclay;message' -> sends 'message\n' to 'm3-1.saclay', 'm3-2.saclay'
+    'm3-1;message'          -> sends 'message\n' to the 'm3-1' of every site
 
     'csv;message;with;semicolons' -> sends 'csv;message;with;semicolons' to all
                                      nodes as 'csv;' is not a valid
@@ -84,7 +111,12 @@ Basic usage from the ssh fronted
 
 #### From your computer ####
 
-Connecting to your computer wireshark using pipes
+Run it on your computer, it reaches the nodes of every site through the
+frontends as the serial aggregator does (see "From your computer" above):
+
+    you@yourpc $ sniffer_aggregator -i <exp_id> -o - | wireshark -k -i -
+
+Or run it on the frontend and pipe its output:
 
     # Connect the output to your PC wireshark
     you@yourpc $ ssh <user>@<site> 'sniffer_aggregator -o -' | wireshark -k -i -
