@@ -157,7 +157,12 @@ def main(args=None):
                 outfd = sys.stdout.buffer
             else:
                 outfd = stack.enter_context(open(opts.outfile, "wb"))
-            with SnifferAggregator(nodes_list, outfd, opts.raw) as aggregator:
+            proxies = stack.enter_context(
+                common.nodes_proxies(nodes_list, opts.username, opts.socks)
+            )
+            aggregator = SnifferAggregator(nodes_list, outfd, opts.raw)
+            aggregator.proxies = proxies
+            with aggregator:
                 aggregator.run()
                 LOGGER.info("%u packets captured", aggregator.rx_packets)
     except (ValueError, RuntimeError) as err:

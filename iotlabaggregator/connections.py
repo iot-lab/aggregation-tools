@@ -28,7 +28,22 @@ import socket
 import sys
 import threading
 
-from iotlabaggregator import LOGGER
+from iotlabaggregator import LOGGER, socksproxy
+
+
+def split_node(hostname):
+    """Return the node name and its site, or None outside a frontend.
+
+    On a frontend, nodes are named as the frontend resolves them (``m3-1``,
+    ``node-a8-2``); elsewhere, with their site (``m3-1.grenoble``).
+
+    >>> split_node("m3-1")
+    ('m3-1', None)
+    >>> split_node("node-a8-2.saclay")
+    ('node-a8-2', 'saclay')
+    """
+    name, _, site = hostname.partition(".")
+    return name, (site or None)
 
 
 class Connection:
@@ -52,8 +67,19 @@ class Connection:
         return ""  # Remaining unprocessed data
 
     def start(self):
-        """Connect to node serial port."""
+        """Connect to node serial port.
+
+        Directly on a frontend, through the SOCKS proxy of the node's site
+        elsewhere (``aggregator.proxies``).
+        """
         self.data_buff = ""
+        name, site = split_node(self.hostname)
+        proxies = getattr(self.aggregator, "proxies", None) or {}
+        if site is not None:
+            if site not in proxies:
+                raise OSError(f"no SOCKS proxy for site {site}")
+            self._sock = socksproxy.socks5_connect(proxies[site], name, self.port)
+            return
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._sock.connect((self.hostname, self.port))
 
@@ -105,6 +131,8 @@ class Aggregator(dict):
     """
 
     connection_class = Connection
+    # SOCKS proxy address per site, for the nodes named <node>.<site>
+    proxies = None
 
     def __init__(self, nodes_list, *args, **kwargs):
         if not nodes_list:
@@ -190,14 +218,25 @@ class Aggregator(dict):
             for node in nodes_list:
                 self._send(node, message)
 
+    def _resolve(self, hostname):
+        """Return the managed nodes matching ``hostname``.
+
+        ``m3-1`` also matches ``m3-1.<site>`` of every site.
+        """
+        if hostname in self:
+            return [hostname]
+        return [key for key in self if split_node(key)[0] == hostname]
+
     def _send(self, hostname, message):
-        """Safely send a message to a single node."""
-        try:
-            self[hostname].send(message.encode("utf-8", "replace"))
-        except KeyError:
+        """Safely send a message to the nodes matching ``hostname``."""
+        nodes = self._resolve(hostname)
+        if not nodes:
             LOGGER.warning("Node not managed: %s", hostname)
-        except OSError:
-            LOGGER.warning("Send failed: %s", hostname)
+        for node in nodes:
+            try:
+                self[node].send(message.encode("utf-8", "replace"))
+            except OSError:
+                LOGGER.warning("Send failed: %s", node)
 
     def broadcast(self, message):
         """Send a message to all nodes."""

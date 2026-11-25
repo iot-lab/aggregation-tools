@@ -31,6 +31,7 @@ import iotlabcli.parser.node
 from iotlabcli import experiment
 
 import iotlabaggregator
+from iotlabaggregator import socksproxy
 
 HOSTNAME = os.uname()[1]
 
@@ -96,18 +97,53 @@ def extract_nodes(resources, hostname=None):
     return nodes
 
 
+def extract_remote_nodes(resources):
+    """Extract the nodes of every site, named <node>.<site>.
+
+    >>> resources = {"items": [ \
+        {'network_address': 'm3-1.grenoble.iot-lab.info', 'site': 'grenoble'},\
+        {'network_address': 'a8-1.strasbourg.iot-lab.info',\
+         'site': 'strasbourg'},\
+        ]}
+    >>> extract_remote_nodes(resources)
+    ['m3-1.grenoble', 'a8-1.strasbourg']
+    """
+    return [".".join(n["network_address"].split(".")[:2]) for n in resources["items"]]
+
+
+def is_frontend(resources, hostname=None):
+    """Tell whether this host is the SSH frontend of a site of ``resources``.
+
+    >>> resources = {"items": [{'network_address': 'm3-1.grenoble.iot-lab.info',
+    ...                         'site': 'grenoble'}]}
+    >>> is_frontend(resources, 'grenoble'), is_frontend(resources, 'laptop')
+    (True, False)
+    """
+    hostname = hostname or HOSTNAME
+    return any(n["site"] == hostname for n in resources["items"])
+
+
 def query_nodes(api, exp_id=None, nodes_list=None, hostname=None):
-    """Get nodes list from nodes_list or current running experiment."""
+    """Get nodes list from nodes_list or current running experiment.
+
+    On a frontend, the nodes of its site (``m3-1``); elsewhere, the nodes of
+    every site, named ``m3-1.grenoble`` and reached through the frontends.
+    """
     hostname = hostname or HOSTNAME
     nodes_list = nodes_list or []
     # -l grenoble,m3,1 -l grenoble,m3,5
     # [['m3-1.grenoble.iot-lab.info'], ['m3-5.grenoble.iot-lab.info']]
     nodes_list = frozenset(itertools.chain.from_iterable(nodes_list))
-    nodes_list = [n.split(".")[0] for n in nodes_list if hostname in n]
     # try to get currently running experiment
     if exp_id is None:
         exp_id = iotlabcli.get_current_experiment(api)
     exp_nodes = experiment.get_experiment(api, exp_id, "nodes")
+    if not is_frontend(exp_nodes, hostname):
+        exp_nodes_list = extract_remote_nodes(exp_nodes)
+        selected = {".".join(n.split(".")[:2]) for n in nodes_list}
+        nodes = set(exp_nodes_list).intersection(selected)
+        return sorted(nodes or exp_nodes_list)
+    nodes_list = [n.split(".")[0] for n in nodes_list if hostname in n]
     exp_nodes_list = extract_nodes(exp_nodes, hostname)
     nodes = set(exp_nodes_list).intersection(nodes_list)
     if nodes:
@@ -138,6 +174,22 @@ def add_nodes_selection_parser(parser):
         dest="nodes_list",
         help="nodes list",
     )
+    remote_group = parser.add_argument_group(
+        title="Outside the SSH frontends",
+        description=(
+            "Elsewhere than on a frontend of the experiment sites, the nodes "
+            "of every site are reached through an 'ssh -D' SOCKS proxy to each "
+            "frontend (IoT-LAB login and SSH key), and named <node>.<site>"
+        ),
+    )
+    remote_group.add_argument(
+        "--socks",
+        action="append",
+        type=socksproxy.parse_socks_option,
+        metavar="SITE=HOST:PORT",
+        default=[],
+        help="use this SOCKS5 proxy for the site instead of starting one",
+    )
 
 
 def get_nodes_selection(
@@ -149,3 +201,24 @@ def get_nodes_selection(
     with iotlabcli.parser.common.catch_missing_auth_cli():
         nodes = query_nodes(api, experiment_id, nodes_list)
     return nodes
+
+
+def iotlab_login(username=None):
+    """Return the IoT-LAB login: given, or from the credentials file."""
+    if username:
+        return username
+    login, _ = iotlabcli.get_user_credentials()
+    if not login:
+        raise RuntimeError("no IoT-LAB login: run 'iotlab-auth -u <login>' or use -u")
+    return login
+
+
+def nodes_proxies(nodes_list, username=None, socks=()):
+    """Context manager of the SOCKS proxies the nodes need, per site.
+
+    Empty for the nodes of a frontend, named without a site.
+    """
+    sites = sorted({n.split(".", 1)[1] for n in nodes_list if "." in n})
+    if not sites:
+        return socksproxy.frontend_proxies([], "")
+    return socksproxy.frontend_proxies(sites, iotlab_login(username), dict(socks))
