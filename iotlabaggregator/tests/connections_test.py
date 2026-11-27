@@ -21,6 +21,10 @@
 
 """Tests for iotlabaggregator.connections"""
 
+import os
+import selectors
+import signal
+import socket
 import unittest
 from unittest.mock import MagicMock, Mock, patch
 
@@ -189,3 +193,81 @@ class TestAggregator(unittest.TestCase):
         agg._loop()
         t.join()
         # Should exit without sending SIGINT (self._running is False)
+
+
+class TestConnectionEnd(unittest.TestCase):
+    """A node closes its serial port: the experiment stopped."""
+
+    def test_recv_end_of_connection(self):
+        conn = connections.Connection("m3-1", Mock())
+        conn._sock = Mock()
+        conn._sock.recv.return_value = b""
+        with self.assertRaises(EOFError):
+            conn.recv(8192)
+
+    def test_ended_connections_leave_and_the_aggregator_exits(self):
+        """The aggregator drops the ended connections and sends SIGINT once
+        none is left, instead of reading end of file in a loop"""
+        agg = connections.Aggregator(["m3-1", "m3-2"])
+        remotes = []
+        for node in agg.values():
+            node._sock, remote = socket.socketpair()
+            remotes.append(remote)
+            agg._selector.register(node._sock, selectors.EVENT_READ, data=node)
+        with (
+            patch("iotlabaggregator.connections.os.kill") as kill,
+            patch("iotlabaggregator.connections.LOGGER"),
+        ):
+            agg._running = True
+            agg.thread.start()
+            for remote in remotes:
+                remote.close()
+            agg.thread.join(5)
+            alive = agg.thread.is_alive()
+            agg._running = False
+            agg.thread.join(5)
+        agg._selector.close()
+        self.assertFalse(alive)
+        self.assertEqual({}, dict(agg))
+        kill.assert_called_once_with(os.getpid(), signal.SIGINT)
+
+    def test_connection_failed_at_start_leaves(self):
+        """A node that can't be reached at the start doesn't keep the
+        aggregator running once the others end"""
+        agg = connections.Aggregator(["m3-1"])
+        with (
+            patch.object(
+                connections.Connection, "start", side_effect=OSError("refused")
+            ),
+            patch("iotlabaggregator.connections.LOGGER"),
+            patch("iotlabaggregator.connections.os.kill") as kill,
+        ):
+            agg.start()
+            agg.thread.join(5)
+            alive = agg.thread.is_alive()
+            agg.stop()
+        self.assertFalse(alive)
+        self.assertNotIn("m3-1", agg)
+        kill.assert_called_once_with(os.getpid(), signal.SIGINT)
+
+    def test_stop_joins_the_loop_before_closing(self):
+        """The sockets are closed once the loop thread ended: no read on a
+        closed socket (Bad file descriptor) at the exit"""
+        agg = connections.Aggregator(["m3-1"])
+        node = agg["m3-1"]
+        node._sock, remote = socket.socketpair()
+        agg._selector.register(node._sock, selectors.EVENT_READ, data=node)
+        agg._running = True
+        agg.thread.start()
+        alive_at_close = []
+        close = node.close
+
+        def recording_close():
+            alive_at_close.append(agg.thread.is_alive())
+            close()
+
+        node.close = recording_close
+        with patch("iotlabaggregator.connections.LOGGER"):
+            agg.stop()
+        remote.close()
+        self.assertEqual([False], alive_at_close)

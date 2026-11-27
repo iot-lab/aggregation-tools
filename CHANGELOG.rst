@@ -13,6 +13,16 @@ Features
   --socks <site>=<host>:<port> reuses an existing proxy
 - serial input accepts '<node>.<site>;message'
 
+Bugs
+~~~~
+
+- serial_aggregator and sniffer_aggregator exit when the experiment stops:
+  the end of a node connection was not seen, the aggregator read it in a
+  loop (one CPU core busy) and never exited
+- no 'Bad file descriptor' errors at the exit: the sockets are closed once
+  the reading thread has ended
+- a node unreachable at the start no longer keeps the aggregator running
+
 2.1.1
 -----
 
