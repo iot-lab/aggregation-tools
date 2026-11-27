@@ -1,6 +1,17 @@
 Changelog
 =========
 
+2.3.1
+-----
+
+Bugs
+~~~~
+
+- serial_aggregator from your computer: a message to a node named without
+  its site ('m3-1;message') could stop the aggregator with 'dictionary
+  changed size during iteration' when a node connection ended at the same
+  time
+
 2.3.0
 -----
 
