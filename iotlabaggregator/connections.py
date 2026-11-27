@@ -242,7 +242,8 @@ class Aggregator(dict):
         """
         if hostname in self:
             return [hostname]
-        return [key for key in self if split_node(key)[0] == hostname]
+        # a copy: connections leave from the loop thread
+        return [key for key in list(self) if split_node(key)[0] == hostname]
 
     def _send(self, hostname, message):
         """Safely send a message to the nodes matching ``hostname``."""
