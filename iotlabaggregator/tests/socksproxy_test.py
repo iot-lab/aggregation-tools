@@ -1,5 +1,5 @@
 # This file is a part of IoT-LAB aggregation-tools
-# Copyright (C) 2026 INRIA (Contact: admin@iot-lab.info)
+# Copyright (C) 2015 INRIA (Contact: admin@iot-lab.info)
 # Contributor(s) : see AUTHORS file
 #
 # This software is governed by the CeCILL license under French law
