@@ -100,8 +100,15 @@ class Connection:
             self._sock = None
 
     def recv(self, n):
-        """Receive up to n bytes from the socket."""
-        return self._sock.recv(n)
+        """Receive up to n bytes from the socket.
+
+        :raises EOFError: the node closed the connection (end of the
+            experiment)
+        """
+        data = self._sock.recv(n)
+        if not data:
+            raise EOFError(f"{self.hostname} closed the connection")
+        return data
 
     def send(self, data):
         """Send data to the node."""
@@ -150,30 +157,40 @@ class Aggregator(dict):
     def _loop(self):
         """Run selector loop; send SIGINT when all connections close."""
         while self._running:
+            if not self:
+                LOGGER.info("Loop finished, all connections closed")
+                os.kill(os.getpid(), signal.SIGINT)
+                return
             events = self._selector.select(timeout=1)
             for key, mask in events:
                 conn = key.data
                 if mask & selectors.EVENT_READ:
                     try:
                         conn.handle_read()
+                    except EOFError:
+                        self._unregister(key.fileobj)
+                        conn.handle_close()
                     except OSError:
-                        try:
-                            self._selector.unregister(key.fileobj)
-                        except (KeyError, ValueError):
-                            pass
+                        self._unregister(key.fileobj)
                         conn.handle_error()
-        if self._running:
-            LOGGER.info("Loop finished, all connections closed")
-            os.kill(os.getpid(), signal.SIGINT)
+                        conn.handle_close()
+
+    def _unregister(self, fileobj):
+        """Stop watching a connection socket."""
+        try:
+            self._selector.unregister(fileobj)
+        except (KeyError, ValueError):
+            pass
 
     def start(self):
         """Connect all nodes and start the selector loop thread."""
         self._running = True
-        for node in self.values():
+        for node in list(self.values()):
             try:
                 node.start()
             except OSError:
                 node.handle_error()
+                node.handle_close()
                 continue
             if node._sock is not None:
                 self._selector.register(node._sock, selectors.EVENT_READ, data=node)
@@ -184,15 +201,15 @@ class Aggregator(dict):
         """Stop all node connections and the selector loop thread."""
         LOGGER.info("Stopping")
         self._running = False
-        for node in self.values():
+        # the loop thread ends before the sockets close: it never reads a
+        # closed one
+        if self.thread.is_alive():
+            self.thread.join()
+        for node in list(self.values()):
             if node._sock is not None:
-                try:
-                    self._selector.unregister(node._sock)
-                except (KeyError, ValueError):
-                    pass
+                self._unregister(node._sock)
             node.close()
         self._selector.close()
-        self.thread.join()
 
     def run(self):
         """Main function to run."""
@@ -240,5 +257,5 @@ class Aggregator(dict):
 
     def broadcast(self, message):
         """Send a message to all nodes."""
-        for node in self.keys():
+        for node in list(self):
             self._send(node, message)
